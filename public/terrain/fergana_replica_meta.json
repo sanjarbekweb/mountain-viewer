@@ -1,0 +1,27 @@
+{
+  "locationId": "fergana_alay",
+  "name": "Fergana Valley / Alay Range (Sux-Kyrgyzstan Border)",
+  "zoom": 14,
+  "tiles": [
+    "11430,6204",
+    "11431,6204",
+    "11430,6205",
+    "11431,6205"
+  ],
+  "bounds": {
+    "west": 71.1474609375,
+    "east": 71.19140625,
+    "north": 39.97712009843962,
+    "south": 39.943436461974215
+  },
+  "center": {
+    "lat": 39.96027828020692,
+    "lng": 71.16943359375
+  },
+  "gridSize": 512,
+  "minElevationMeters": 1147.1000000000004,
+  "maxElevationMeters": 1612.5,
+  "elevationDeltaMeters": 465.39999999999964,
+  "groundResolutionMeters": 7.33,
+  "createdAt": "2026-09-26T07:26:52.930Z"
+}

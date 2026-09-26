@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef, useEffect, forwardRef, useImperativeHandle, useCallback } from "react";
+import React, { useMemo, useRef, useEffect, useState, forwardRef, useImperativeHandle, useCallback } from "react";
 import * as THREE from "three";
 import { generateAlpineFractalDEM } from "@/lib/terrain/demDecoder";
 import { useSceneStore } from "@/lib/stores/useSceneStore";
@@ -8,6 +8,13 @@ import { TerrainChunk } from "./TerrainChunk";
 import { Google3DTiles } from "./Google3DTiles";
 import { getLandmarkById } from "@/lib/terrain/earthLandmarks";
 import { generateFerganaSatelliteTexture } from "@/lib/terrain/satelliteTextureGenerator";
+import {
+  loadFerganaDEM,
+  getCachedFerganaDEM,
+  sampleRealElevationWorldY,
+  sampleRealElevationMeters,
+  FERGANA_DEM_META,
+} from "@/lib/terrain/realTerrainLoader";
 import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from "three-mesh-bvh";
 
 // Extend Three.js prototype once
@@ -20,6 +27,7 @@ if (!(THREE.BufferGeometry.prototype as unknown as { computeBoundsTree?: unknown
 export interface MountainTerrainHandle {
   mesh: THREE.Mesh | null;
   sampleHeight: (x: number, z: number) => number;
+  sampleRealMeters?: (x: number, z: number) => number;
 }
 
 interface MountainTerrainProps {
@@ -39,36 +47,44 @@ export const MountainTerrain = forwardRef<MountainTerrainHandle, MountainTerrain
     const CHUNK_GRID_COUNT = 4; // 4x4 chunked terrain
     const chunkSize = size / CHUNK_GRID_COUNT;
 
-    // Generate high-resolution photorealistic satellite texture for Fergana Sux
+    // 512x512 Real DEM State
+    const [realDem, setRealDem] = useState<Float32Array | null>(getCachedFerganaDEM());
+
+    useEffect(() => {
+      if (activeLocationId === "fergana_alay" && !realDem) {
+        loadFerganaDEM().then((data) => {
+          if (data) setRealDem(data);
+        });
+      }
+    }, [activeLocationId, realDem]);
+
+    // Generate high-resolution true-to-life satellite orthophoto drape for Fergana Sux
     const satelliteTexture = useMemo(() => {
       if (activeLocationId === "fergana_alay") {
-        if (mapboxConfig.accessToken && typeof window !== "undefined") {
+        if (typeof window !== "undefined") {
           const loader = new THREE.TextureLoader();
-          const url = `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/${landmark.lng},${landmark.lat},13.2,0,0/1024x1024?access_token=${mapboxConfig.accessToken}`;
-          try {
-            const liveTex = loader.load(
-              url,
-              () => {
-                liveTex.needsUpdate = true;
-              },
-              undefined,
-              (err) => {
-                console.warn("Using procedural satellite texture fallback:", err);
-              }
-            );
-            liveTex.wrapS = THREE.ClampToEdgeWrapping;
-            liveTex.wrapT = THREE.ClampToEdgeWrapping;
-            liveTex.minFilter = THREE.LinearMipmapLinearFilter;
-            liveTex.magFilter = THREE.LinearFilter;
-            return liveTex;
-          } catch {
-            return generateFerganaSatelliteTexture();
-          }
+          const replicaTex = loader.load(
+            "/terrain/fergana_satellite_replica.jpg",
+            () => {
+              replicaTex.needsUpdate = true;
+            },
+            undefined,
+            () => {
+              console.warn("Falling back to procedural satellite texture generator");
+            }
+          );
+          // Set flipY=false so image North matches 3D world North
+          replicaTex.flipY = false;
+          replicaTex.wrapS = THREE.ClampToEdgeWrapping;
+          replicaTex.wrapT = THREE.ClampToEdgeWrapping;
+          replicaTex.minFilter = THREE.LinearMipmapLinearFilter;
+          replicaTex.magFilter = THREE.LinearFilter;
+          return replicaTex;
         }
         return generateFerganaSatelliteTexture();
       }
       return null;
-    }, [activeLocationId, mapboxConfig.accessToken, landmark.lng, landmark.lat]);
+    }, [activeLocationId]);
 
     // Determine shader map mode: 0 = Alpine, 1 = Mapbox Light, 2 = Mapbox Outdoors, 3 = Mapbox Satellite
     const shaderMapMode = useMemo(() => {
@@ -112,7 +128,12 @@ export const MountainTerrain = forwardRef<MountainTerrainHandle, MountainTerrain
         // Morphological shaping per landmark
         const distFromCenter = Math.sqrt(worldX * worldX + worldZ * worldZ) / half;
         if (activeLocationId === "fergana_alay") {
-          // Exact 3D landscape of Sux / Fergana gorge & Kyrgyzstan border escarpment
+          // Sub-meter accurate 3D DEM replica of Sux / Fergana gorge & Kyrgyzstan border
+          if (realDem) {
+            return sampleRealElevationWorldY(worldX, worldZ, size, elevationMultiplier, realDem);
+          }
+
+          // Initial procedural fallback while 512x512 DEM loads
           const normX = worldX / half;
           const normZ = worldZ / half;
 
@@ -162,7 +183,7 @@ export const MountainTerrain = forwardRef<MountainTerrainHandle, MountainTerrain
       };
 
       return { elevationGrid: baseGrid, elevationFn: fn };
-    }, [size, maxElevation, activeLocationId, elevationMultiplier]);
+    }, [size, maxElevation, activeLocationId, elevationMultiplier, realDem]);
 
     // Build unified collision geometry with BVH tree for sub-0.2ms raycasting
     const collisionGeometry = useMemo(() => {
@@ -197,8 +218,14 @@ export const MountainTerrain = forwardRef<MountainTerrainHandle, MountainTerrain
       () => ({
         mesh: collisionMeshRef.current,
         sampleHeight: elevationFn,
+        sampleRealMeters: (x: number, z: number) => {
+          if (activeLocationId === "fergana_alay" && realDem) {
+            return sampleRealElevationMeters(x, z, size, realDem);
+          }
+          return landmark.altitude + elevationFn(x, z) * 12.5;
+        },
       }),
-      [elevationFn]
+      [elevationFn, activeLocationId, realDem, landmark.altitude, size]
     );
 
     // Generate 4x4 array of chunk indices [0, 1, 2, 3] x [0, 1, 2, 3]

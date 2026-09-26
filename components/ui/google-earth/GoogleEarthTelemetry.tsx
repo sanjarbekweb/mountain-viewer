@@ -43,10 +43,16 @@ export function GoogleEarthTelemetry() {
     >
       <span>{landmark.lat.toFixed(4)}°N, {landmark.lng.toFixed(4)}°E</span>
       <span className="mx-2 text-gray-400">•</span>
-      <span>elev {landmark.altitude.toLocaleString()}m</span>
+      <span>
+        {activeLocationId === "fergana_alay"
+          ? "elev 1,147m – 1,613m (Δ 465m)"
+          : `elev ${landmark.altitude.toLocaleString()}m`}
+      </span>
       <span className="mx-2 text-gray-400">•</span>
       <span>
-        {mapSource === "mapbox_simulator"
+        {activeLocationId === "fergana_alay"
+          ? "3D Full DEM Replica"
+          : mapSource === "mapbox_simulator"
           ? `Mapbox 3D (${mapboxConfig.style})`
           : mapSource === "google_3d_tiles"
           ? "Google 3D Tiles"

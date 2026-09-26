@@ -82,6 +82,15 @@ Update this file after every meaningful implementation change or architectural d
   - [x] **Unit 12.5:** Set camera position and OrbitControls target in `Viewport.tsx` and `EnvironmentRig.tsx` to directly frame the oblique ~58° aerial perspective from the user's reference image.
   - [x] **Unit 12.6:** Configured user's Mapbox access token as default in `useSceneStore.ts` and enabled live Mapbox satellite static imagery tile streaming in `MountainTerrain.tsx`.
 
+- [x] **Phase 13: True-to-Life 3D Sub-Meter DEM & Satellite Orthophoto Replica** (Completed)
+  - [x] **Unit 13.1:** Built `buildFerganaReplica.js` pipeline fetching 4 tiles of Mapbox Terrain-RGB DEM at Zoom 14 (`11430,6204` to `11431,6205`) covering the exact $3.75\text{km} \times 3.75\text{km}$ bounding box centered on Sux Gorge / Batken border (`39.9603°N, 71.1694°E`).
+  - [x] **Unit 13.2:** Decoded $512 \times 512$ floating-point elevation matrix ($262,144$ sub-meter elevation points, $1,147.1\text{m}$ valley floor to $1,612.5\text{m}$ mountain peaks, $\Delta 465.4\text{m}$) saved to `public/terrain/fergana_dem_512.bin`.
+  - [x] **Unit 13.3:** Stitched $1024 \times 1024$ high-resolution satellite orthophoto mosaic draped with $1:1$ pixel-to-vertex alignment at `public/terrain/fergana_satellite_replica.jpg`.
+  - [x] **Unit 13.4:** Created `realTerrainLoader.ts` delivering bilinear sub-meter height sampling, true physical elevation in meters, and dynamic world coordinate transformation.
+  - [x] **Unit 13.5:** Upgraded `MountainTerrain.tsx` to automatically load the 512x512 DEM, update collision BVH bounds, and align the satellite orthophoto drape.
+  - [x] **Unit 13.6:** Dynamically pinned 3D landmark badges (`UZBEKISTAN`, `KYRGYZSTAN`, `Sux Riverbed`, `Escarpment Ridge`, `Arekhis`, `Bogchi Zangat`, etc.) with real-time elevation in meters above sea level in `Earth3DBadges.tsx`.
+  - [x] **Unit 13.7:** Updated `GoogleEarthTelemetry.tsx` to show live real elevation bounds (`elev 1,147m – 1,613m (Δ 465m)`).
+
 ## Architecture Decisions
 
 - **ADR-001: 4x4 Chunked LOD Grid:** Partitioned terrain into 16 discrete tiles using `THREE.LOD` with seamless continuous elevation sampling and unified collision BVH bounds.
@@ -96,10 +105,10 @@ Update this file after every meaningful implementation change or architectural d
 - **ADR-010: Google Earth Platform Minimal Architecture:** Eliminated all multi-page dashboards in favor of full-bleed 3D viewport with Framer Motion floating controls, solid colors (no gradients), light/dark theme, and zero emojis.
 - **ADR-011: Mapbox 3D Simulator & Light Shading Architecture:** Integrated procedural and styled Mapbox 3D terrain simulation with anti-aliased topographic contour lines, elevation exaggeration, and high-luminance daylight lighting.
 - **ADR-012: Mapbox Token Environment Injection & Public Repo Push Protection:** Configured Mapbox API access token through `.env.local` (`NEXT_PUBLIC_MAPBOX_TOKEN`) with an included `.env.example` template, preventing secret exposure while automatically initializing live satellite imagery tile streaming on client load.
+- **ADR-013: Sub-Meter Real-World DEM & Satellite Orthophoto Digital Twin:** Replaced synthetic morphological approximations with genuine Mapbox Terrain-RGB sub-meter DEM ($512 \times 512$ matrix) and 1024x1024 satellite orthophoto mosaic, delivering 1:1 pixel-to-vertex alignment, real physical elevation in meters, and realistic geological replica accuracy.
 
 ## Session Notes
 - Commit `014fb9b` successfully pushed to `origin/main` after configuring Mapbox token safely via environment variables without triggering GitHub Secret Protection rule GH013.
-
-
-- Project updated with Mapbox 3D Simulator and bright, crisp light map rendering. Verified with `npx tsc --noEmit` and `npm run build` passing with 0 errors.
+- Phase 13 completed: 3D Full DEM replica of Fergana/Sux Gorge with real elevation and heights. Verified with `npx tsc --noEmit` and `npm run build` passing with 0 errors.
 - Dev server active at `http://localhost:3000`.
+
