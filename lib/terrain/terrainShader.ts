@@ -135,17 +135,17 @@ export const MountainShaderMaterial = {
 
       // Light calculation: bright daylight with luminous ambient fill
       float diff = max(dot(norm, sunDirection), 0.0);
-      vec3 sunLight = vec3(1.0, 0.99, 0.96) * 1.35;
-      vec3 skyFill = vec3(0.70, 0.78, 0.90) * 0.85;
-      vec3 groundBounce = vec3(0.55, 0.58, 0.55) * 0.65;
+      vec3 sunLight = vec3(1.0, 0.99, 0.97) * 1.6;
+      vec3 skyFill = vec3(0.85, 0.90, 0.98) * 1.15;
+      vec3 groundBounce = vec3(0.78, 0.80, 0.76) * 0.95;
       vec3 totalAmbient = mix(groundBounce, skyFill, norm.y * 0.5 + 0.5);
 
       vec3 finalColor = vec3(1.0);
 
       // MODE 1: MAPBOX LIGHT (Clean Minimalist Topographic Architecture)
       if (mapMode > 0.5 && mapMode < 1.5) {
-        // High-clarity light cartographic hillshading
-        float hillshade = diff * 0.45 + 0.55;
+        // High-clarity light cartographic hillshading (minimum 0.70 brightness)
+        float hillshade = diff * 0.30 + 0.70;
         vec3 surface = mix(mapboxLightShade, mapboxLightBase, clamp(hillshade, 0.0, 1.0));
 
         // Subtle snow caps at the very highest peaks
@@ -157,10 +157,10 @@ export const MountainShaderMaterial = {
         // Topographic contour lines
         if (showContourLines > 0.5) {
           float contour = getContourFactor(elevation, contourInterval);
-          surface = mix(surface, mapboxLightContour, contour * 0.7);
+          surface = mix(surface, mapboxLightContour, contour * 0.65);
         }
 
-        finalColor = surface * (totalAmbient * 0.4 + vec3(0.75));
+        finalColor = surface * (totalAmbient * 0.35 + vec3(0.88));
       }
       // MODE 2: MAPBOX OUTDOORS (Daylight GIS Hiking Topo)
       else if (mapMode >= 1.5 && mapMode < 2.5) {
@@ -176,16 +176,16 @@ export const MountainShaderMaterial = {
         // Topographic contour lines
         if (showContourLines > 0.5) {
           float contour = getContourFactor(elevation, contourInterval);
-          surface = mix(surface, mapboxOutdoorsContour, contour * 0.65);
+          surface = mix(surface, mapboxOutdoorsContour, contour * 0.6);
         }
 
-        vec3 lit = surface * (sunLight * diff + totalAmbient);
-        finalColor = mix(surface, lit, 0.75);
+        vec3 lit = surface * (sunLight * diff * 0.85 + totalAmbient * 1.15);
+        finalColor = mix(surface, lit, 0.65);
       }
       // MODE 3: MAPBOX SATELLITE (High-Albedo Aerial Photography Drape)
       else if (mapMode >= 2.5) {
-        vec3 satValley = vec3(0.52, 0.64, 0.42);
-        vec3 satRock = vec3(0.74, 0.72, 0.68);
+        vec3 satValley = vec3(0.58, 0.70, 0.48);
+        vec3 satRock = vec3(0.80, 0.78, 0.74);
         float slopeFactor = smoothstep(rockSlopeThreshold - 0.12, rockSlopeThreshold + 0.05, slope);
         vec3 surface = mix(satRock, satValley, slopeFactor);
 
@@ -193,7 +193,7 @@ export const MountainShaderMaterial = {
         float snowBlend = smoothstep(snowStart, snowElevation + 4.0, elevation);
         surface = mix(surface, snowColor, snowBlend * clamp(slope * 1.3, 0.0, 1.0));
 
-        finalColor = surface * (sunLight * diff * 0.8 + totalAmbient * 0.9);
+        finalColor = surface * (sunLight * diff * 0.75 + totalAmbient * 1.1);
       }
       // MODE 0: ALPINE TOPO DEM (Bright Daylight Natural Alpine)
       else {
@@ -215,7 +215,7 @@ export const MountainShaderMaterial = {
           finalDiffuse = mix(finalDiffuse, vec3(0.35, 0.40, 0.45), contour * 0.4);
         }
 
-        finalColor = finalDiffuse * (sunLight * diff + totalAmbient);
+        finalColor = finalDiffuse * (sunLight * diff * 0.85 + totalAmbient * 1.2);
       }
 
       gl_FragColor = vec4(finalColor, 1.0);

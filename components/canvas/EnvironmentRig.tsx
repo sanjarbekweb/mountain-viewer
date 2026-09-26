@@ -24,17 +24,20 @@ export function EnvironmentRig() {
         mieDirectionalG={0.85}
       />
 
-      {/* Atmospheric Depth Fog (Crisp Daylight Horizon) */}
-      <fog attach="fog" args={[isLight ? "#eef4f9" : "#1a1e28", 60, 320]} />
+      {/* Atmospheric Depth Fog (Soft Distant Horizon, clear nearby terrain) */}
+      <fog attach="fog" args={[isLight ? "#f8fafc" : "#1a1e28", 140, 450]} />
 
       {/* Luminous Ambient Fill Light */}
-      <ambientLight intensity={isLight ? 1.1 : 0.75} />
+      <ambientLight intensity={isLight ? 1.5 : 1.0} />
 
-      {/* Primary Sunlight */}
+      {/* Rich Sky-to-Ground Hemisphere Illumination */}
+      <hemisphereLight args={["#ffffff", "#cbd5e1", isLight ? 1.4 : 0.9]} />
+
+      {/* Primary Daylight Sunlight */}
       <directionalLight
-        position={[65, 75, 45]}
-        intensity={isLight ? 2.4 : 1.8}
-        color={isLight ? "#ffffff" : "#f1f5f9"}
+        position={[70, 85, 50]}
+        intensity={isLight ? 3.2 : 2.2}
+        color={isLight ? "#ffffff" : "#f8fafc"}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
@@ -47,11 +50,18 @@ export function EnvironmentRig() {
         shadow-bias={-0.0004}
       />
 
-      {/* Skylight Fill from opposite side */}
+      {/* Daylight Fill Light from opposite side */}
       <directionalLight
-        position={[-40, 30, -35]}
-        intensity={isLight ? 0.75 : 0.45}
-        color={isLight ? "#dbeafe" : "#93c5fd"}
+        position={[-50, 45, -40]}
+        intensity={isLight ? 1.4 : 0.8}
+        color={isLight ? "#e0f2fe" : "#93c5fd"}
+      />
+
+      {/* Additional Counter-Rim Light for complete 360-degree clarity */}
+      <directionalLight
+        position={[15, 60, -70]}
+        intensity={isLight ? 1.0 : 0.6}
+        color="#ffffff"
       />
 
       {/* Camera Controls with Ground Clipping Prevention */}

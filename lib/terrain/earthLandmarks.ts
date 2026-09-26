@@ -2,6 +2,21 @@ import { EarthLocation } from "@/types/scene";
 
 export const EARTH_MOUNTAIN_LANDMARKS: EarthLocation[] = [
   {
+    id: "fergana_alay",
+    name: "Fergana Valley / Alay Range",
+    region: "Fergana Region, Shohimardon Gorge",
+    country: "Uzbekistan",
+    lat: 39.9066,
+    lng: 71.1716,
+    altitude: 1256,
+    peakElevation: 2480,
+    tag: "FERGANA VALLEY",
+    description: "Rugged limestone gorges, canyons, and dramatic foothills of the Alay Range in the southern Fergana Valley.",
+    thumbnailUrl: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=600&q=80",
+    roughness: 0.85,
+    elevationScale: 38,
+  },
+  {
     id: "matterhorn",
     name: "Matterhorn Peak",
     region: "Pennine Alps, Zermatt",

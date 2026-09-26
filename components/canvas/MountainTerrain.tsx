@@ -79,7 +79,13 @@ export const MountainTerrain = forwardRef<MountainTerrainHandle, MountainTerrain
 
         // Morphological shaping per landmark
         const distFromCenter = Math.sqrt(worldX * worldX + worldZ * worldZ) / half;
-        if (activeLocationId === "mount_fuji") {
+        if (activeLocationId === "fergana_alay") {
+          // Fergana / Shohimardon mountain gorge & terraced limestone ridge profile
+          const canyonAxis = Math.abs(worldX * 0.65 - worldZ * 0.75) / half;
+          const canyonCut = Math.exp(-canyonAxis * canyonAxis * 20.0) * 8.0;
+          const terracedRidges = Math.sin(worldX * 0.16 + worldZ * 0.12) * 4.5;
+          h = Math.max(h + terracedRidges - canyonCut, 2.0);
+        } else if (activeLocationId === "mount_fuji") {
           // Conical volcano profile with central caldera crater
           const cone = Math.max(0, 1 - distFromCenter);
           const crater = distFromCenter < 0.12 ? Math.cos((distFromCenter / 0.12) * Math.PI) * 4 : 0;

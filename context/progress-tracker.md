@@ -72,6 +72,8 @@ Update this file after every meaningful implementation change or architectural d
   - [x] **Unit 11.4:** Boosted environment lighting in `EnvironmentRig.tsx` (luminous daylight fill, ambient intensity 1.1, sun intensity 2.4, clear horizon fog).
   - [x] **Unit 11.5:** Dynamic elevation exaggeration slider (1.0x to 2.5x) in `MountainTerrain.tsx` updating both visual mesh and BVH collision tree.
   - [x] **Unit 11.6:** Embedded full Mapbox Simulator controls into the Layers drawer in `GoogleEarthDrawer.tsx` and updated `GoogleEarthTelemetry.tsx`.
+  - [x] **Unit 11.7:** Imported Fergana Valley / Alay Range (`39.9066°N, 71.1716°E`, altitude 1,256m) as the primary default location with custom canyon and ridge terrain morphology in `MountainTerrain.tsx`.
+  - [x] **Unit 11.8:** Boosted scene illumination in `EnvironmentRig.tsx` and `terrainShader.ts` (ambient intensity 1.5, sky-to-ground hemisphere light 1.4, primary sun 3.2, daylight fill light 1.4, counter-rim light 1.0, minimum 70% shadow luminance).
 
 ## Architecture Decisions
 

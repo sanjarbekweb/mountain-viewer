@@ -65,13 +65,13 @@ interface SceneStore {
 const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
   size: 160,
   segments: 192,
-  maxElevation: 42,
+  maxElevation: 38,
   wireframe: false,
   showLOD: true,
-  snowElevation: 24,
+  snowElevation: 26,
   rockSlopeAngle: 28,
   mapSource: "mapbox_simulator",
-  activeLocationId: "matterhorn",
+  activeLocationId: "fergana_alay",
 };
 
 const DEFAULT_GOOGLE_TILES_CONFIG: GoogleTilesConfig = {
