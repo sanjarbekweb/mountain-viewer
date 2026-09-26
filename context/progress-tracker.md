@@ -95,8 +95,11 @@ Update this file after every meaningful implementation change or architectural d
 - **ADR-009: TypeUI Bento Design Architecture:** Adopted Bergside TypeUI design system blueprint.
 - **ADR-010: Google Earth Platform Minimal Architecture:** Eliminated all multi-page dashboards in favor of full-bleed 3D viewport with Framer Motion floating controls, solid colors (no gradients), light/dark theme, and zero emojis.
 - **ADR-011: Mapbox 3D Simulator & Light Shading Architecture:** Integrated procedural and styled Mapbox 3D terrain simulation with anti-aliased topographic contour lines, elevation exaggeration, and high-luminance daylight lighting.
+- **ADR-012: Mapbox Token Environment Injection & Public Repo Push Protection:** Configured Mapbox API access token through `.env.local` (`NEXT_PUBLIC_MAPBOX_TOKEN`) with an included `.env.example` template, preventing secret exposure while automatically initializing live satellite imagery tile streaming on client load.
 
 ## Session Notes
+- Commit `014fb9b` successfully pushed to `origin/main` after configuring Mapbox token safely via environment variables without triggering GitHub Secret Protection rule GH013.
+
 
 - Project updated with Mapbox 3D Simulator and bright, crisp light map rendering. Verified with `npx tsc --noEmit` and `npm run build` passing with 0 errors.
 - Dev server active at `http://localhost:3000`.
