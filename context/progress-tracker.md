@@ -57,7 +57,13 @@ Update this file after every meaningful implementation change or architectural d
   - [x] **Unit 8.3:** Built `EarthDashboard.tsx` matching the user's reference image design (`media_1790401066528.jpg`): pill search bar, profile badge, hero banner card, "Trending Mountain Sites 🔥" grid, active scene structures, live 3D stream card with play overlay, and telemetry physics panel.
   - [x] **Unit 8.4:** Built `AppSidebar.tsx` with modern rounded pill navigation (Earth 3D & Peaks vs 3D Studio vs AI 3D Generator).
   - [x] **Unit 8.5:** Seamlessly integrated `viewMode` switching in `useSceneStore.ts` and `page.tsx` between the full-screen Earth Dashboard and 3D Studio Canvas.
-  - [x] **Unit 8.6:** Verified TypeScript compilation and production build (`npm run build`) passing in 3.8s with zero errors.
+- [x] **Phase 9: TypeUI Design System & Bento Dashboard Overhaul** (Completed)
+  - [x] **Unit 9.1:** Pulled TypeUI design system via `typeui.sh` (`https://github.com/bergside/typeui`), creating canonical `DESIGN.md` and `.agents/skills/design-system-bento/SKILL.md`.
+  - [x] **Unit 9.2:** Overhauled styling tokens in `app/globals.css` with TypeUI Bento obsidian palette (`#11141c`), luminous violet-lavender active pills (`#7064e9`), and custom slider/scrollbar accents.
+  - [x] **Unit 9.3:** Refactored `EarthDashboard.tsx` to match the reference design: 'It Takes Two' hero card with red starburst `NEW` tag, 3-column 'Trending mountains 🔥' bento cards, lower bento row with AI studio promo and recent site projects with pill 'Play' buttons, and right-hand 'Stream', 'Friends online', and 'Groups' panels.
+  - [x] **Unit 9.4:** Redesigned `AppSidebar.tsx` with clean 'Mountain Story' brand header and rounded-2xl active pill navigation.
+  - [x] **Unit 9.5:** Wrapped application in an outer floating window container with `rounded-[28px]` and subtle border.
+  - [x] **Unit 9.6:** Verified TypeScript compilation (`npx tsc --noEmit`) and Turbopack build (`npm run build`) passing cleanly in 2.7s.
 
 ## Architecture Decisions
 
@@ -69,9 +75,11 @@ Update this file after every meaningful implementation change or architectural d
 - **ADR-006: Invariant 3 Pivot Normalization:** Every loaded GLB dynamically recenters on $X/Z$ and aligns base $Y_{min} = 0$ upon ingestion.
 - **ADR-007: AETHERIS Desktop Chrome Pattern:** Replaced floating glassmorphic panels with fixed desktop-app chrome (title bar + menu bar + left icon strip + right accordion panel) for professional CAD aesthetics.
 - **ADR-008: Google Earth 3D Tiles & Dual Mode Architecture:** Integrated OGC 3D Tiles streaming with real-world geographic landmarks and dual-view mode (Dashboard Explorer vs 3D Studio).
+- **ADR-009: TypeUI Bento Design Architecture:** Adopted Bergside TypeUI design system blueprint (`DESIGN.md` and `.agents/skills/`) with structured bento card geometry, lavender pill interactive states, and gaming dashboard ergonomics.
 
 ## Session Notes
 
-- Project is fully implemented with AETHERIS-style UI, verified, and running via `npm run dev` at `http://localhost:3000`.
+- Project is fully implemented with TypeUI Bento design, verified, and running via `npm run dev` at `http://localhost:3000`.
+- Git commits: `bc2ca5a` (Core), `7bb032c` (CAD UI), `8d1e329` (Google Earth 3D), and current TypeUI Bento overhaul.
 - Authored full `README.md` documentation aligned with the project's architectural invariants and curated open-source repository presentation standards.
 - Git commits: `bc2ca5a` (Phase 1-4 core), `7bb032c` (Phase 6 AETHERIS UI redesign).
