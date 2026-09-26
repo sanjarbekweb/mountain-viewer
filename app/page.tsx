@@ -2,10 +2,11 @@
 
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
-import { Toolbar } from "@/components/ui/Toolbar";
-import { Sidebar } from "@/components/ui/Sidebar";
-import { InspectorPanel } from "@/components/ui/InspectorPanel";
+import { TopMenuBar } from "@/components/ui/TopMenuBar";
+import { LeftToolStrip } from "@/components/ui/LeftToolStrip";
+import { RightPanel } from "@/components/ui/RightPanel";
 import { ModelGenerationModal } from "@/components/ui/ModelGenerationModal";
+import FpsBadge from "@/components/ui/FpsBadge";
 import { exportSceneToGLB } from "@/lib/export/sceneExporter";
 import { useSceneStore } from "@/lib/stores/useSceneStore";
 import * as THREE from "three";
@@ -31,8 +32,6 @@ export default function MountainArchitectPage() {
     try {
       showToast("Packaging scene geometry into .GLB...");
 
-      // Simple export group creation
-      const exportObjects: THREE.Object3D[] = [];
       const exportGroup = new THREE.Group();
 
       for (const asset of assets) {
@@ -64,8 +63,7 @@ export default function MountainArchitectPage() {
         exportGroup.add(assetMesh);
       }
 
-      exportObjects.push(exportGroup);
-      await exportSceneToGLB(exportObjects, "alpine_mountain_scene.glb");
+      await exportSceneToGLB([exportGroup], "alpine_mountain_scene.glb");
       showToast("Scene exported successfully as alpine_mountain_scene.glb");
     } catch (err) {
       console.error(err);
@@ -74,42 +72,55 @@ export default function MountainArchitectPage() {
   };
 
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-slate-950 font-sans select-none">
-      {/* 3D WebGL Canvas Viewport */}
-      <Viewport />
-
-      {/* Floating Viewport Toolbar */}
-      <Toolbar
+    <main className="relative w-screen h-screen overflow-hidden bg-[#0d1117] font-sans select-none flex flex-col">
+      {/* ─── Top Chrome: Title Bar + Menu ─── */}
+      <TopMenuBar
         onOpenAIModal={() => setIsAIModalOpen(true)}
         onExportScene={handleExportScene}
       />
 
-      {/* Left Dock: Asset Library & Scene Hierarchy */}
-      <Sidebar onOpenAIModal={() => setIsAIModalOpen(true)} />
+      {/* ─── Main Content Area (below chrome) ─── */}
+      <div className="relative flex-1 overflow-hidden">
+        {/* 3D WebGL Canvas Viewport — fills available space */}
+        <div className="absolute inset-0 pl-11 pr-72">
+          <Viewport />
 
-      {/* Right Dock: Asset Properties & Plinth Inspector */}
-      <InspectorPanel />
-
-      {/* AI Concept to 3D Synthesis Modal */}
-      <ModelGenerationModal
-        isOpen={isAIModalOpen}
-        onClose={() => setIsAIModalOpen(false)}
-      />
-
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-xl bg-slate-900/90 border border-slate-700/80 text-cyan-300 text-xs font-medium shadow-2xl backdrop-blur-md pointer-events-none transition-all animate-bounce">
-          {toastMessage}
+          {/* FPS / WebGL / LOD Badge (inside viewport area) */}
+          <FpsBadge />
         </div>
-      )}
 
-      {/* Bottom Status Ribbon */}
-      <div className="absolute bottom-2 right-4 z-10 pointer-events-none text-[10px] text-slate-500 font-mono flex items-center gap-3">
-        <span>BVH Spatial Index: Active</span>
-        <span>•</span>
-        <span>DEM: Alpine Ridged Multi-fractal</span>
-        <span>•</span>
-        <span>Next.js 15 + R3F</span>
+        {/* Left Vertical Tool Strip */}
+        <LeftToolStrip
+          onOpenAssetLibrary={() => {}}
+          onOpenAIModal={() => setIsAIModalOpen(true)}
+        />
+
+        {/* Right Panel: Scene Controls + AI Generator + Tree + Inspector */}
+        <RightPanel
+          onStartGeneration={() => setIsAIModalOpen(true)}
+        />
+
+        {/* AI Concept to 3D Synthesis Modal (overlay) */}
+        <ModelGenerationModal
+          isOpen={isAIModalOpen}
+          onClose={() => setIsAIModalOpen(false)}
+        />
+
+        {/* Toast Notification */}
+        {toastMessage && (
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-lg bg-[#161b22]/95 border border-slate-700/80 text-cyan-300 text-xs font-medium shadow-2xl backdrop-blur-md pointer-events-none">
+            {toastMessage}
+          </div>
+        )}
+
+        {/* Bottom Status Ribbon */}
+        <div className="absolute bottom-1.5 left-14 z-10 pointer-events-none text-[9px] text-slate-500/70 font-mono flex items-center gap-2">
+          <span>BVH Spatial Index: Active</span>
+          <span className="text-slate-700">•</span>
+          <span>DEM: Alpine Ridged Multi-fractal</span>
+          <span className="text-slate-700">•</span>
+          <span>Next.js + R3F + three-mesh-bvh</span>
+        </div>
       </div>
     </main>
   );

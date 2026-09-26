@@ -1,18 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  --bg-canvas: #020617;
-  --bg-base: #0f172a;
-  --bg-elevated: #1e293b;
-  --accent-primary: #06b6d4;
-  --accent-secondary: #6366f1;
-  --text-primary: #f8fafc;
-  --text-muted: #94a3b8;
-  --border-subtle: #1e293b;
-  --border-active: #06b6d480;
-  --state-success: #10b981;
-  --state-warning: #f59e0b;
-  --state-danger: #f43f5e;
+  /* AETHERIS Dark Navy CAD Theme */
+  --bg-app: #0d1117;
+  --bg-chrome: #0d1117;
+  --bg-menu: #161b22;
+  --bg-panel: #0d1117;
+  --bg-panel-section: #161b22;
+  --bg-input: #0d1117;
+  --bg-elevated: #1c2333;
+  --bg-canvas: #000000;
+
+  --accent-primary: #58a6ff;
+  --accent-cyan: #22d3ee;
+  --accent-indigo: #818cf8;
+  --accent-green: #3fb950;
+  --accent-orange: #d29922;
+  --accent-red: #f85149;
+
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #484f58;
+  --text-accent: #58a6ff;
+
+  --border-default: #21262d;
+  --border-muted: #30363d;
+  --border-active: #58a6ff;
 }
 
 html, body {
@@ -21,23 +34,60 @@ html, body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-color: var(--bg-canvas);
+  background-color: var(--bg-app);
   color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   user-select: none;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Custom scrollbars for sidebars and panels */
+/* AETHERIS Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #30363d;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #484f58;
+}
+
+/* Range Slider Styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: #21262d;
+  border-radius: 9999px;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #58a6ff;
+  cursor: pointer;
+  border: 2px solid #0d1117;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  background: #79c0ff;
+}
+
+/* Checkbox Styling */
+input[type="checkbox"] {
+  accent-color: #58a6ff;
+}
+
+/* FPS Badge */
+.fps-badge {
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  font-size: 10px;
+  letter-spacing: 0.05em;
 }
