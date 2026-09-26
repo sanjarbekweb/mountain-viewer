@@ -7,53 +7,61 @@ import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 
 export function EnvironmentRig() {
   const isDraggingGizmo = useSceneStore((state) => state.isDraggingGizmo);
+  const theme = useSceneStore((state) => state.theme);
   const controlsRef = useRef<OrbitControlsImpl>(null!);
+
+  const isLight = theme === "light";
 
   return (
     <>
-      {/* Alpine Atmosphere & Sky */}
+      {/* Google Earth Style Atmosphere & Sky */}
       <Sky
         distance={450000}
-        sunPosition={[60, 45, 30]}
-        turbidity={7}
-        rayleigh={1.2}
+        sunPosition={isLight ? [50, 60, 40] : [20, 25, 15]}
+        turbidity={isLight ? 4 : 8}
+        rayleigh={isLight ? 0.8 : 2.5}
         mieCoefficient={0.005}
         mieDirectionalG={0.8}
       />
 
-      {/* Atmospheric Alpine Depth Fog */}
-      <fog attach="fog" args={["#0b1120", 30, 240]} />
+      {/* Atmospheric Depth Fog */}
+      <fog attach="fog" args={[isLight ? "#dce6f2" : "#11141c", 40, 260]} />
 
       {/* Ambient Fill Light */}
-      <ambientLight intensity={0.45} />
+      <ambientLight intensity={isLight ? 0.75 : 0.45} />
 
-      {/* Primary Alpine Sunlight */}
+      {/* Primary Sunlight */}
       <directionalLight
-        position={[60, 50, 30]}
-        intensity={1.8}
+        position={[60, 60, 40]}
+        intensity={isLight ? 2.2 : 1.6}
+        color={isLight ? "#ffffff" : "#e0e7ff"}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
         shadow-camera-near={0.5}
-        shadow-camera-far={250}
-        shadow-camera-left={-70}
-        shadow-camera-right={70}
-        shadow-camera-top={70}
-        shadow-camera-bottom={-70}
+        shadow-camera-far={260}
+        shadow-camera-left={-80}
+        shadow-camera-right={80}
+        shadow-camera-top={80}
+        shadow-camera-bottom={-80}
         shadow-bias={-0.0004}
       />
 
-      {/* Cool Skylight Fill from opposite side */}
-      <directionalLight position={[-40, 20, -30]} intensity={0.35} color="#93c5fd" />
+      {/* Skylight Fill from opposite side */}
+      <directionalLight
+        position={[-40, 20, -30]}
+        intensity={isLight ? 0.5 : 0.3}
+        color={isLight ? "#bae6fd" : "#818cf8"}
+      />
 
       {/* Camera Controls with Ground Clipping Prevention */}
       <OrbitControls
         ref={controlsRef}
         makeDefault
-        enabled={!isDraggingGizmo} // Invariant 4: Disable when gizmo dragging
+        enabled={!isDraggingGizmo} // Disable when gizmo dragging
         maxPolarAngle={Math.PI / 2 - 0.04} // Prevents camera from dipping beneath terrain
         minDistance={5}
-        maxDistance={220}
+        maxDistance={240}
         dampingFactor={0.06}
       />
     </>

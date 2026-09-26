@@ -1,44 +1,95 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { AppSidebar } from "@/components/ui/AppSidebar";
-import { LeftToolStrip } from "@/components/ui/LeftToolStrip";
-import { RightPanel } from "@/components/ui/RightPanel";
-import { EarthDashboard } from "@/components/dashboard/EarthDashboard";
+import { AnimatePresence, motion } from "framer-motion";
+import { GoogleEarthSearch } from "@/components/ui/google-earth/GoogleEarthSearch";
+import { GoogleEarthControls } from "@/components/ui/google-earth/GoogleEarthControls";
+import { GoogleEarthDrawer } from "@/components/ui/google-earth/GoogleEarthDrawer";
+import { GoogleEarthKnowledgeCard } from "@/components/ui/google-earth/GoogleEarthKnowledgeCard";
+import { GoogleEarthTelemetry } from "@/components/ui/google-earth/GoogleEarthTelemetry";
 import { ModelGenerationModal } from "@/components/ui/ModelGenerationModal";
-import FpsBadge from "@/components/ui/FpsBadge";
 import { exportSceneToGLB } from "@/lib/export/sceneExporter";
 import { useSceneStore } from "@/lib/stores/useSceneStore";
-import { ArrowLeft, Share2, Mountain, Globe2, Play } from "lucide-react";
-import { getLandmarkById } from "@/lib/terrain/earthLandmarks";
+import { TransformMode } from "@/types/scene";
 import * as THREE from "three";
 
-// Dynamically import Three.js Viewport to avoid SSR canvas rendering issues
+// Dynamically import Three.js Viewport to avoid SSR canvas issues
 const Viewport = dynamic(
   () => import("@/components/canvas/Viewport").then((mod) => mod.Viewport),
   { ssr: false }
 );
 
-export default function MountainArchitectPage() {
+export default function GoogleEarthViewerPage() {
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const viewMode = useSceneStore((state) => state.viewMode);
-  const setViewMode = useSceneStore((state) => state.setViewMode);
+  const theme = useSceneStore((state) => state.theme);
   const assets = useSceneStore((state) => state.assets);
-  const activeLocationId = useSceneStore((state) => state.terrainConfig.activeLocationId);
+  const undo = useSceneStore((state) => state.undo);
+  const redo = useSceneStore((state) => state.redo);
+  const setTransformMode = useSceneStore((state) => state.setTransformMode);
 
-  const currentLandmark = getLandmarkById(activeLocationId);
+  const isLight = theme === "light";
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
+    setTimeout(() => setToastMessage(null), 3000);
   };
+
+  // Keyboard shortcuts (Q/W/E/R, Undo/Redo)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        (e.target instanceof HTMLElement && e.target.isContentEditable)
+      ) {
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        if (e.shiftKey) redo();
+        else undo();
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+        e.preventDefault();
+        redo();
+        return;
+      }
+
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      switch (e.key.toLowerCase()) {
+        case "q":
+          e.preventDefault();
+          setTransformMode("select" as TransformMode);
+          break;
+        case "w":
+          e.preventDefault();
+          setTransformMode("translate" as TransformMode);
+          break;
+        case "e":
+          e.preventDefault();
+          setTransformMode("rotate" as TransformMode);
+          break;
+        case "r":
+          e.preventDefault();
+          setTransformMode("scale" as TransformMode);
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [setTransformMode, undo, redo]);
 
   const handleExportScene = async () => {
     try {
-      showToast("Packaging scene geometry into .GLB...");
+      showToast("Packaging 3D scene into .GLB...");
 
       const exportGroup = new THREE.Group();
 
@@ -54,7 +105,6 @@ export default function MountainArchitectPage() {
         assetMesh.rotation.set(...asset.rotation);
         assetMesh.scale.set(...asset.scale);
 
-        // Foundation slab
         if (asset.foundation.enabled) {
           const plinth = new THREE.Mesh(
             new THREE.BoxGeometry(w * 1.04, asset.foundation.depth, d * 1.04),
@@ -71,8 +121,8 @@ export default function MountainArchitectPage() {
         exportGroup.add(assetMesh);
       }
 
-      await exportSceneToGLB([exportGroup], "alpine_mountain_scene.glb");
-      showToast("Scene exported successfully as alpine_mountain_scene.glb");
+      await exportSceneToGLB([exportGroup], "mountain_scene.glb");
+      showToast("Scene exported as mountain_scene.glb");
     } catch (err) {
       console.error(err);
       showToast("Export failed");
@@ -80,95 +130,61 @@ export default function MountainArchitectPage() {
   };
 
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-[#0c0e15] font-sans select-none p-2 sm:p-3 lg:p-4 flex items-center justify-center">
-      {/* ── Main Bento App Window Shell (Reference Design Outer Shell) ── */}
-      <div className="relative w-full h-full max-w-[1720px] bg-[#11141c] rounded-[28px] border border-white/5 shadow-2xl flex overflow-hidden">
-        {/* Left Navigation Bar */}
-        <AppSidebar
-          onOpenAIModal={() => setIsAIModalOpen(true)}
-        />
-
-        {/* Dynamic View Mode: Earth Dashboard vs 3D Studio Canvas */}
-        {viewMode === "dashboard" ? (
-          <EarthDashboard
-            onOpenAIModal={() => setIsAIModalOpen(true)}
-            onEnterStudio={() => setViewMode("studio")}
-          />
-        ) : (
-          <div className="relative flex-1 overflow-hidden flex flex-col bg-[#090c13]">
-            {/* ── Studio Top Floating Bar ── */}
-            <div className="h-11 px-4 border-b border-white/5 bg-[#11141c] flex items-center justify-between z-30 shrink-0">
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setViewMode("dashboard")}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#181c28] hover:bg-[#7064e9] text-xs font-semibold text-slate-300 hover:text-white transition-all cursor-pointer border border-white/5"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Dashboard</span>
-                </button>
-
-                <div className="flex items-center gap-2 text-xs font-bold text-white">
-                  <Mountain className="w-3.5 h-3.5 text-[#7064e9]" />
-                  <span>{currentLandmark.name}</span>
-                  <span className="text-[11px] font-mono text-[#fcd34d]">({currentLandmark.altitude}m)</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleExportScene}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#7064e9] hover:bg-[#8174f8] text-white text-xs font-bold transition-all shadow-md shadow-[#7064e9]/20 cursor-pointer"
-                >
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span>Export .GLB</span>
-                </button>
-              </div>
-            </div>
-
-            {/* ── 3D Viewport Content Area ── */}
-            <div className="relative flex-1 overflow-hidden">
-              <div className="absolute inset-0 pl-11 pr-80">
-                <Viewport />
-                <FpsBadge />
-              </div>
-
-              {/* Studio Left Tool Strip */}
-              <LeftToolStrip
-                onOpenAIModal={() => setIsAIModalOpen(true)}
-              />
-
-              {/* Studio Right Accordion Panel */}
-              <RightPanel
-                onStartGeneration={() => setIsAIModalOpen(true)}
-              />
-
-              {/* In-viewport Bottom Status Pill */}
-              <div className="absolute bottom-3 left-14 z-10 pointer-events-none text-[10px] text-slate-300 font-mono flex items-center gap-2 bg-[#181c28]/90 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-lg">
-                <span className="text-[#10b981] font-bold">● Google 3D Earth</span>
-                <span className="text-slate-600">•</span>
-                <span>BVH Continuous Snapping Active</span>
-                <span className="text-slate-600">•</span>
-                <span className="text-[#7064e9]">LOD Dynamic</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* AI Concept to 3D Synthesis Modal */}
-        <ModelGenerationModal
-          isOpen={isAIModalOpen}
-          onClose={() => setIsAIModalOpen(false)}
-        />
-
-        {/* Floating Toast Notification */}
-        {toastMessage && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-2 rounded-full bg-[#181c28]/95 border border-[#7064e9] text-white text-xs font-semibold shadow-2xl backdrop-blur-md pointer-events-none animate-bounce">
-            {toastMessage}
-          </div>
-        )}
+    <main
+      className={`relative w-screen h-screen overflow-hidden font-sans select-none ${
+        isLight ? "bg-[#dce6f2] text-[#202124]" : "bg-[#11141c] text-[#e8eaed]"
+      }`}
+    >
+      {/* ── 1. Full-Bleed 3D Mountain Viewport (Zero Frame, Full Screen) ── */}
+      <div className="absolute inset-0 z-0">
+        <Viewport />
       </div>
+
+      {/* ── 2. Top-Left Floating Controls: Search & Left Icon Drawer ── */}
+      <div className="absolute top-5 left-5 z-20 flex flex-col gap-3 pointer-events-none">
+        <GoogleEarthSearch />
+        <GoogleEarthDrawer onOpenAIModal={() => setIsAIModalOpen(true)} />
+      </div>
+
+      {/* ── 3. Top-Right / Right: Floating Knowledge & Structure Inspector Card ── */}
+      <div className="absolute top-5 right-5 z-20 pointer-events-none">
+        <GoogleEarthKnowledgeCard onExportScene={handleExportScene} />
+      </div>
+
+      {/* ── 4. Bottom-Right: Floating Google Earth Controls (Compass, 3D, Zoom, Theme) ── */}
+      <div className="absolute bottom-6 right-6 z-20 pointer-events-none">
+        <GoogleEarthControls />
+      </div>
+
+      {/* ── 5. Bottom-Left: Telemetry Bar (Coordinates, Elevation, FPS) ── */}
+      <div className="absolute bottom-4 left-5 z-20 pointer-events-none">
+        <GoogleEarthTelemetry />
+      </div>
+
+      {/* ── 6. AI Image-to-3D Synthesis Modal (Overlay) ── */}
+      <ModelGenerationModal
+        isOpen={isAIModalOpen}
+        onClose={() => setIsAIModalOpen(false)}
+      />
+
+      {/* ── 7. Framer Motion Floating Toast Notification ── */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 16, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className={`absolute bottom-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-semibold shadow-xl border pointer-events-none ${
+              isLight
+                ? "bg-white text-gray-900 border-gray-200"
+                : "bg-[#202124] text-white border-[#3c4043]"
+            }`}
+          >
+            {toastMessage}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }

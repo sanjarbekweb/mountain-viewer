@@ -57,13 +57,14 @@ Update this file after every meaningful implementation change or architectural d
   - [x] **Unit 8.3:** Built `EarthDashboard.tsx` matching the user's reference image design (`media_1790401066528.jpg`): pill search bar, profile badge, hero banner card, "Trending Mountain Sites 🔥" grid, active scene structures, live 3D stream card with play overlay, and telemetry physics panel.
   - [x] **Unit 8.4:** Built `AppSidebar.tsx` with modern rounded pill navigation (Earth 3D & Peaks vs 3D Studio vs AI 3D Generator).
   - [x] **Unit 8.5:** Seamlessly integrated `viewMode` switching in `useSceneStore.ts` and `page.tsx` between the full-screen Earth Dashboard and 3D Studio Canvas.
-- [x] **Phase 9: TypeUI Design System & Bento Dashboard Overhaul** (Completed)
-  - [x] **Unit 9.1:** Pulled TypeUI design system via `typeui.sh` (`https://github.com/bergside/typeui`), creating canonical `DESIGN.md` and `.agents/skills/design-system-bento/SKILL.md`.
-  - [x] **Unit 9.2:** Overhauled styling tokens in `app/globals.css` with TypeUI Bento obsidian palette (`#11141c`), luminous violet-lavender active pills (`#7064e9`), and custom slider/scrollbar accents.
-  - [x] **Unit 9.3:** Refactored `EarthDashboard.tsx` to match the reference design: 'It Takes Two' hero card with red starburst `NEW` tag, 3-column 'Trending mountains 🔥' bento cards, lower bento row with AI studio promo and recent site projects with pill 'Play' buttons, and right-hand 'Stream', 'Friends online', and 'Groups' panels.
-  - [x] **Unit 9.4:** Redesigned `AppSidebar.tsx` with clean 'Mountain Story' brand header and rounded-2xl active pill navigation.
-  - [x] **Unit 9.5:** Wrapped application in an outer floating window container with `rounded-[28px]` and subtle border.
-  - [x] **Unit 9.6:** Verified TypeScript compilation (`npx tsc --noEmit`) and Turbopack build (`npm run build`) passing cleanly in 2.7s.
+- [x] **Phase 10: Google Earth Platform Architecture & Minimal Design** (Completed)
+  - [x] **Unit 10.1:** Installed `framer-motion` and built floating Google Earth UI overlays: `GoogleEarthSearch.tsx` (pill search with animated dropdown), `GoogleEarthControls.tsx` (compass, 3D/2D toggle, zoom in/out, light/dark theme switch), `GoogleEarthDrawer.tsx` (vertical left icon rail with animated side drawer for layers, structures, and AI), `GoogleEarthKnowledgeCard.tsx` (animated summit knowledge card & structure inspector), and `GoogleEarthTelemetry.tsx` (single-line coordinate & elevation status).
+  - [x] **Unit 10.2:** Removed dashboard pages and all unnecessary nested frames; the entire app is now a full-bleed 3D viewport canvas identical to the Google Earth platform.
+  - [x] **Unit 10.3:** Removed all gradient colors in favor of solid Google Earth design tokens (Google Blue `#1a73e8`/`#8ab4f8`, solid `#ffffff`/`#202124` surfaces).
+  - [x] **Unit 10.4:** Added complete Light and Dark theme modes with reactive Three.js environment sky, fog, and lighting.
+  - [x] **Unit 10.5:** Removed all emojis across components, modals, and data structures.
+  - [x] **Unit 10.6:** Deleted orphaned legacy components (`EarthDashboard.tsx`, `AppSidebar.tsx`, `TopMenuBar.tsx`, `LeftToolStrip.tsx`, `RightPanel.tsx`, `Toolbar.tsx`, `Sidebar.tsx`, `InspectorPanel.tsx`).
+  - [x] **Unit 10.7:** Verified TypeScript compilation (`npx tsc --noEmit`) and Turbopack production build (`npm run build`) passing with zero errors.
 
 ## Architecture Decisions
 
@@ -73,13 +74,14 @@ Update this file after every meaningful implementation change or architectural d
 - **ADR-004: OrbitControls Conflict Avoidance:** Wire `dragging-changed` in `TransformControls` to disable camera orbit during gizmo interactions.
 - **ADR-005: Dual Snapping Modes:** Architecture structures stay upright on world $Y$-axis with subterranean plinths; props align to terrain normal vector.
 - **ADR-006: Invariant 3 Pivot Normalization:** Every loaded GLB dynamically recenters on $X/Z$ and aligns base $Y_{min} = 0$ upon ingestion.
-- **ADR-007: AETHERIS Desktop Chrome Pattern:** Replaced floating glassmorphic panels with fixed desktop-app chrome (title bar + menu bar + left icon strip + right accordion panel) for professional CAD aesthetics.
-- **ADR-008: Google Earth 3D Tiles & Dual Mode Architecture:** Integrated OGC 3D Tiles streaming with real-world geographic landmarks and dual-view mode (Dashboard Explorer vs 3D Studio).
-- **ADR-009: TypeUI Bento Design Architecture:** Adopted Bergside TypeUI design system blueprint (`DESIGN.md` and `.agents/skills/`) with structured bento card geometry, lavender pill interactive states, and gaming dashboard ergonomics.
+- **ADR-007: AETHERIS Desktop Chrome Pattern:** Replaced floating glassmorphic panels with fixed desktop-app chrome for professional CAD aesthetics.
+- **ADR-008: Google Earth 3D Tiles & Dual Mode Architecture:** Integrated OGC 3D Tiles streaming with real-world geographic landmarks and dual-view mode.
+- **ADR-009: TypeUI Bento Design Architecture:** Adopted Bergside TypeUI design system blueprint.
+- **ADR-010: Google Earth Platform Minimal Architecture:** Eliminated all multi-page dashboards in favor of full-bleed 3D viewport with Framer Motion floating controls, solid colors (no gradients), light/dark theme, and zero emojis.
 
 ## Session Notes
 
-- Project is fully implemented with TypeUI Bento design, verified, and running via `npm run dev` at `http://localhost:3000`.
+- Project faithfully replicates the official Google Earth platform design, verified, and running via `npm run dev` at `http://localhost:3000`.
 - Git commits: `bc2ca5a` (Core), `7bb032c` (CAD UI), `8d1e329` (Google Earth 3D), and current TypeUI Bento overhaul.
 - Authored full `README.md` documentation aligned with the project's architectural invariants and curated open-source repository presentation standards.
 - Git commits: `bc2ca5a` (Phase 1-4 core), `7bb032c` (Phase 6 AETHERIS UI redesign).

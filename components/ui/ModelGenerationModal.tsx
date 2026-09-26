@@ -4,14 +4,15 @@ import React, { useState } from "react";
 import {
   X,
   Sparkles,
-  UploadCloud,
-  CheckCircle2,
+  Upload,
+  Check,
   AlertCircle,
   Loader2,
-  ArrowRight,
-  Maximize2,
-  Layers,
+  Mountain,
+  Box,
+  Compass,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useSceneStore } from "@/lib/stores/useSceneStore";
 
 interface ModelGenerationModalProps {
@@ -29,9 +30,10 @@ export function ModelGenerationModal({ isOpen, onClose }: ModelGenerationModalPr
   const [generatedModelUrl, setGeneratedModelUrl] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const theme = useSceneStore((state) => state.theme);
   const setAssetToPlace = useSceneStore((state) => state.setAssetToPlace);
 
-  if (!isOpen) return null;
+  const isLight = theme === "light";
 
   const samples = [
     {
@@ -39,21 +41,21 @@ export function ModelGenerationModal({ isOpen, onClose }: ModelGenerationModalPr
       name: "Cantilever Alpine Lodge",
       desc: "Mass timber frame with glass curtain walls",
       dimensions: [7, 5, 8] as [number, number, number],
-      thumb: "🏔️",
+      icon: Mountain,
     },
     {
       id: "modernist_cube",
       name: "Geometric Cliff Cube",
-      desc: "Modular dark concrete and steel box",
+      desc: "Modular dark concrete and steel structure",
       dimensions: [5.5, 4, 5.5] as [number, number, number],
-      thumb: "📐",
+      icon: Box,
     },
     {
       id: "ridge_shelter",
       name: "High Ridge Climber Shelter",
-      desc: "Aerodynamic faceted dome shelter",
+      desc: "Aerodynamic faceted alpine dome shelter",
       dimensions: [4.5, 3.5, 4.5] as [number, number, number],
-      thumb: "🏕️",
+      icon: Compass,
     },
   ];
 
@@ -63,240 +65,240 @@ export function ModelGenerationModal({ isOpen, onClose }: ModelGenerationModalPr
       setErrorMsg(null);
       setProgress(5);
 
-      // Step 1: Dispatch non-blocking task
       const res = await fetch("/api/generate-model/dispatch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           promptHint,
-          polycount,
-          imageUrl: selectedSample,
+          targetPolycount: polycount,
+          dimensions: [7, 5, 8],
         }),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to dispatch generation task");
+      const data = await res.json();
+      if (!res.ok || !data.taskId) {
+        throw new Error(data.error || "Dispatch failed");
       }
 
-      const data = await res.json();
-      const currentTaskId = data.taskId;
-      setTaskId(currentTaskId);
+      setTaskId(data.taskId);
       setStatus("processing");
 
-      // Step 2: Poll status endpoint
-      const interval = setInterval(async () => {
+      const pollInterval = setInterval(async () => {
         try {
-          const pollRes = await fetch(`/api/generate-model/status?taskId=${currentTaskId}`);
-          if (!pollRes.ok) return;
-
+          const pollRes = await fetch(`/api/generate-model/status?taskId=${data.taskId}`);
           const pollData = await pollRes.json();
-          setProgress(pollData.progress || 0);
+
+          if (pollData.progress) {
+            setProgress(pollData.progress);
+          }
 
           if (pollData.status === "SUCCEEDED") {
-            clearInterval(interval);
+            clearInterval(pollInterval);
             setStatus("succeeded");
+            setProgress(100);
             setGeneratedModelUrl(pollData.modelUrl || "/models/sample_cabin.glb");
           } else if (pollData.status === "FAILED") {
-            clearInterval(interval);
+            clearInterval(pollInterval);
             setStatus("failed");
-            setErrorMsg(pollData.error || "Generation process failed");
+            setErrorMsg(pollData.error || "Model generation failed");
           }
-        } catch (err) {
-          console.error("Polling error:", err);
+        } catch (err: any) {
+          clearInterval(pollInterval);
+          setStatus("failed");
+          setErrorMsg(err?.message || "Polling error");
         }
-      }, 1500);
-    } catch (err: unknown) {
+      }, 1000);
+    } catch (err: any) {
       setStatus("failed");
-      setErrorMsg(err instanceof Error ? err.message : "Error starting generation");
+      setErrorMsg(err?.message || "Generation request failed");
     }
   };
 
   const handlePlaceInScene = () => {
-    const selectedObj = samples.find((s) => s.id === selectedSample) || samples[0];
+    const activeSample = samples.find((s) => s.id === selectedSample) || samples[0];
+
     setAssetToPlace({
-      name: `AI: ${selectedObj.name}`,
+      name: activeSample.name,
       type: "ai_generated",
       sourceUrl: generatedModelUrl || "/models/sample_cabin.glb",
-      dimensions: selectedObj.dimensions,
+      dimensions: activeSample.dimensions,
       alignToNormal: false,
     });
+
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
-      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col pointer-events-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-950/40">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-slate-100">AI 3D Model Studio</h2>
-              <p className="text-[11px] text-slate-400">Convert 2D concept sketches into decimated mountain structures</p>
-            </div>
-          </div>
-          <button
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+          />
 
-        {/* Content */}
-        <div className="p-4 space-y-4">
-          {status === "idle" && (
-            <>
-              {/* Concept Presets / Upload */}
+          {/* Modal Dialog */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className={`relative w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border p-6 z-10 ${
+              isLight ? "bg-white border-gray-200 text-gray-900" : "bg-[#202124] border-[#3c4043] text-gray-100"
+            }`}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-2">
+                <Sparkles className={`w-5 h-5 ${isLight ? "text-blue-600" : "text-[#8ab4f8]"}`} />
+                <h2 className="text-sm font-bold uppercase tracking-wider">AI 3D Model Generator</h2>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+
+            {/* Content Body */}
+            <div className="space-y-4 py-4 text-xs">
+              {/* Image Upload Area */}
               <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-2">
-                  Select Architectural Concept or Upload
+                <label className="text-[11px] font-semibold text-gray-500 block mb-1">
+                  2D Architectural Concept
+                </label>
+                <div
+                  className={`p-6 rounded-xl border border-dashed text-center flex flex-col items-center justify-center cursor-pointer ${
+                    isLight
+                      ? "border-gray-300 hover:border-blue-600 bg-gray-50"
+                      : "border-gray-600 hover:border-[#8ab4f8] bg-[#303134]"
+                  }`}
+                >
+                  <Upload className="w-6 h-6 text-gray-400 mb-2" />
+                  <p className="font-semibold">Drop concept sketch or browse</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">Supports PNG, JPG, WEBP</p>
+                </div>
+              </div>
+
+              {/* Architectural Style Hint */}
+              <div>
+                <label className="text-[11px] font-semibold text-gray-500 block mb-1">
+                  Architectural Style
+                </label>
+                <input
+                  type="text"
+                  value={promptHint}
+                  onChange={(e) => setPromptHint(e.target.value)}
+                  placeholder="e.g. Modernist cantilever retreat with panoramic glass"
+                  className={`w-full px-3 py-2 rounded-lg border text-xs focus:outline-none ${
+                    isLight ? "bg-gray-50 border-gray-200 focus:border-blue-600" : "bg-[#303134] border-[#3c4043] focus:border-[#8ab4f8]"
+                  }`}
+                />
+              </div>
+
+              {/* Sample Presets */}
+              <div>
+                <label className="text-[11px] font-semibold text-gray-500 block mb-1.5">
+                  Preset Architectural Archetypes
                 </label>
                 <div className="grid grid-cols-3 gap-2">
-                  {samples.map((sample) => {
-                    const isSelected = selectedSample === sample.id;
+                  {samples.map((s) => {
+                    const isSelected = selectedSample === s.id;
+                    const Icon = s.icon;
+
                     return (
                       <div
-                        key={sample.id}
-                        onClick={() => {
-                          setSelectedSample(sample.id);
-                          setPromptHint(sample.name);
-                        }}
-                        className={`p-3 rounded-xl border cursor-pointer text-center transition-all ${
+                        key={s.id}
+                        onClick={() => setSelectedSample(s.id)}
+                        className={`p-2.5 rounded-xl border cursor-pointer text-left transition-colors ${
                           isSelected
-                            ? "bg-cyan-950/40 border-cyan-500 text-cyan-200"
-                            : "bg-slate-950/50 border-slate-800 hover:bg-slate-800/40 text-slate-400"
+                            ? isLight ? "bg-blue-50 border-blue-600 text-blue-900" : "bg-[#303134] border-[#8ab4f8] text-white"
+                            : isLight ? "border-gray-200 hover:bg-gray-50" : "border-gray-700 hover:bg-gray-800 text-gray-300"
                         }`}
                       >
-                        <span className="text-2xl block mb-1">{sample.thumb}</span>
-                        <p className="text-[11px] font-medium text-slate-200 truncate">{sample.name}</p>
-                        <p className="text-[10px] text-slate-500 mt-0.5">{sample.dimensions[0]}×{sample.dimensions[2]}m</p>
+                        <Icon className={`w-4 h-4 mb-1.5 ${isSelected ? (isLight ? "text-blue-600" : "text-[#8ab4f8]") : "text-gray-400"}`} />
+                        <div className="font-bold text-[11px] truncate">{s.name}</div>
+                        <div className="text-[9px] text-gray-400 truncate">{s.desc}</div>
                       </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Prompt Hint */}
-              <div>
-                <label className="text-xs font-semibold text-slate-300 block mb-1">
-                  Architectural Style & Materials
-                </label>
-                <input
-                  type="text"
-                  value={promptHint}
-                  onChange={(e) => setPromptHint(e.target.value)}
-                  placeholder="e.g. Alpine glass cantilever cabin with slate base"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500"
-                />
-              </div>
-
-              {/* Target Decimation Polycount */}
-              <div className="p-3 rounded-xl bg-slate-950/50 border border-slate-800/80 space-y-1.5">
-                <div className="flex justify-between text-xs text-slate-300">
-                  <span className="flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-cyan-400" />
-                    Target Polycount (<span className="text-cyan-300 font-mono">{(polycount / 1000).toFixed(0)}k faces</span>)
-                  </span>
-                  <span className="text-[10px] text-emerald-400 font-medium">60 FPS Optimized</span>
+              {/* Progress bar if processing */}
+              {status === "processing" && (
+                <div className="space-y-1 pt-1">
+                  <div className="flex justify-between text-[11px] font-mono text-gray-500">
+                    <span className="flex items-center gap-1.5">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Generating geometry and textures...
+                    </span>
+                    <span>{progress}%</span>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
+                    <div
+                      className={`h-full transition-all duration-300 ${isLight ? "bg-blue-600" : "bg-[#8ab4f8]"}`}
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="10000"
-                  max="50000"
-                  step="5000"
-                  value={polycount}
-                  onChange={(e) => setPolycount(parseInt(e.target.value))}
-                  className="w-full accent-cyan-400"
-                />
-              </div>
+              )}
 
-              <button
-                onClick={handleStartGeneration}
-                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-medium text-xs shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 transition-all"
-              >
-                <Sparkles className="w-4 h-4 text-cyan-200" />
-                <span>Synthesize 3D Model</span>
-              </button>
-            </>
-          )}
-
-          {(status === "dispatching" || status === "processing") && (
-            <div className="py-8 px-4 text-center space-y-4">
-              <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
-                <Loader2 className="w-12 h-12 text-cyan-400 animate-spin" />
-                <Sparkles className="w-5 h-5 text-indigo-400 absolute" />
-              </div>
-
-              <div className="space-y-1">
-                <h3 className="text-sm font-semibold text-slate-100">
-                  Generating Volumetric Mesh
-                </h3>
-                <p className="text-xs text-slate-400">
-                  {progress < 30
-                    ? "Synthesizing multi-view depth fields..."
-                    : progress < 75
-                    ? "Remeshing geometry topology & Draco decimation..."
-                    : "Calibrating bottom-center pivot coordinates..."}
-                </p>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
-                <div
-                  className="bg-gradient-to-r from-cyan-500 to-indigo-500 h-full transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-
-              <p className="text-[11px] font-mono text-cyan-300">{progress}% Completed</p>
+              {/* Error display */}
+              {status === "failed" && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{errorMsg || "Failed to generate 3D model"}</span>
+                </div>
+              )}
             </div>
-          )}
 
-          {status === "succeeded" && (
-            <div className="py-6 px-4 text-center space-y-4">
-              <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-6 h-6" />
-              </div>
+            {/* Modal Footer */}
+            <div className="pt-3 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className={`px-4 py-2 rounded-lg text-xs font-semibold ${
+                  isLight ? "hover:bg-gray-100 text-gray-700" : "hover:bg-[#303134] text-gray-300"
+                }`}
+              >
+                Cancel
+              </button>
 
-              <div>
-                <h3 className="text-sm font-semibold text-slate-100">Structure Synthesized Successfully!</h3>
-                <p className="text-xs text-slate-400 mt-1">
-                  Water-tight geometry decimated to {(polycount / 1000).toFixed(0)}k polygons with bottom-center pivot calibration.
-                </p>
-              </div>
-
-              <div className="flex gap-2">
+              {status === "succeeded" ? (
                 <button
+                  type="button"
                   onClick={handlePlaceInScene}
-                  className="flex-1 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/20"
+                  className={`px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer ${
+                    isLight ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-[#10b981] hover:bg-[#059669] text-white"
+                  }`}
                 >
-                  <ArrowRight className="w-4 h-4" />
-                  <span>Snap into Mountain Scene</span>
+                  <Check className="w-4 h-4" />
+                  Place on Mountain
                 </button>
-              </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleStartGeneration}
+                  disabled={status === "dispatching" || status === "processing"}
+                  className={`px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+                    isLight ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-[#8ab4f8] hover:bg-[#aecbfa] text-[#202124]"
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Generate 3D Model
+                </button>
+              )}
             </div>
-          )}
-
-          {status === "failed" && (
-            <div className="py-6 px-4 text-center space-y-4">
-              <div className="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center mx-auto">
-                <AlertCircle className="w-6 h-6" />
-              </div>
-              <h3 className="text-sm font-semibold text-slate-100">Generation Failed</h3>
-              <p className="text-xs text-rose-300">{errorMsg || "An error occurred"}</p>
-              <button
-                onClick={() => setStatus("idle")}
-                className="px-4 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-medium"
-              >
-                Try Again
-              </button>
-            </div>
-          )}
+          </motion.div>
         </div>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 }

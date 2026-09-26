@@ -1,11 +1,18 @@
 import { create } from "zustand";
-import { PlacedAsset, TransformMode, TerrainConfig, ViewMode, GoogleTilesConfig } from "@/types/scene";
+import { PlacedAsset, TransformMode, TerrainConfig, GoogleTilesConfig, ThemeMode } from "@/types/scene";
 import { getLandmarkById } from "@/lib/terrain/earthLandmarks";
 
+export type ActivePanelType = "none" | "search" | "layers" | "projects" | "ai" | "inspector";
+
 interface SceneStore {
-  // Navigation & View Mode
-  viewMode: ViewMode;
-  setViewMode: (mode: ViewMode) => void;
+  // Theme Mode
+  theme: ThemeMode;
+  setTheme: (theme: ThemeMode) => void;
+  toggleTheme: () => void;
+
+  // Active Overlay Panel (Framer Motion Drawer)
+  activePanel: ActivePanelType;
+  setActivePanel: (panel: ActivePanelType) => void;
 
   // Asset Management
   assets: PlacedAsset[];
@@ -74,15 +81,19 @@ const DEFAULT_GOOGLE_TILES_CONFIG: GoogleTilesConfig = {
 };
 
 export const useSceneStore = create<SceneStore>((set, get) => ({
-  viewMode: "dashboard", // default to modern Google Earth 3D Explorer dashboard
-  setViewMode: (mode) => set({ viewMode: mode }),
+  theme: "dark",
+  setTheme: (theme) => set({ theme }),
+  toggleTheme: () => set((state) => ({ theme: state.theme === "dark" ? "light" : "dark" })),
+
+  activePanel: "none",
+  setActivePanel: (panel) => set({ activePanel: panel }),
 
   assets: [
     {
       id: "preset-alpine-lodge",
       name: "Alpine Timber Lodge",
       sourceUrl: "/models/sample_cabin.glb",
-      thumbnailUrl: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=400&q=80",
+      thumbnailUrl: "",
       type: "cabin",
       position: [12, 11.2, -8],
       rotation: [0, 0.4, 0],
@@ -102,7 +113,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
       id: "preset-lookout-tower",
       name: "Panoramic Lookout Tower",
       sourceUrl: "/models/sample_tower.glb",
-      thumbnailUrl: "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=400&q=80",
+      thumbnailUrl: "",
       type: "tower",
       position: [-24, 21.8, 16],
       rotation: [0, -0.6, 0],
@@ -119,7 +130,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
       locked: false,
     },
   ],
-  selectedAssetId: "preset-alpine-lodge",
+  selectedAssetId: null,
   transformMode: "translate",
   snapMode: "gravity_upright",
   isDraggingGizmo: false,
@@ -129,14 +140,15 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   historyPast: [],
   historyFuture: [],
 
-  selectAsset: (id) => set({ selectedAssetId: id }),
+  selectAsset: (id) =>
+    set({
+      selectedAssetId: id,
+      activePanel: id ? "inspector" : "none",
+    }),
 
   setTransformMode: (mode) => set({ transformMode: mode }),
-
   setSnapMode: (mode) => set({ snapMode: mode }),
-
   setDraggingGizmo: (isDragging) => set({ isDraggingGizmo: isDragging }),
-
   setAssetToPlace: (asset) => set({ assetToPlace: asset }),
 
   addAsset: (asset) => {
@@ -146,16 +158,15 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
       historyFuture: [],
       assets: [...assets, asset],
       selectedAssetId: asset.id,
-      assetToPlace: null, // exit placement mode after drop
+      assetToPlace: null,
+      activePanel: "inspector",
     });
   },
 
   updateAsset: (id, updates) => {
     const { assets } = get();
     const updated = assets.map((a) => (a.id === id ? { ...a, ...updates } : a));
-    set({
-      assets: updated,
-    });
+    set({ assets: updated });
   },
 
   removeAsset: (id) => {
@@ -165,6 +176,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
       historyFuture: [],
       assets: assets.filter((a) => a.id !== id),
       selectedAssetId: selectedAssetId === id ? null : selectedAssetId,
+      activePanel: selectedAssetId === id ? "none" : get().activePanel,
     });
   },
 
@@ -185,6 +197,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
       historyFuture: [],
       assets: [...assets, duplicate],
       selectedAssetId: duplicate.id,
+      activePanel: "inspector",
     });
   },
 
