@@ -24,6 +24,7 @@ interface TerrainChunkProps {
   mapMode?: number;
   showContourLines?: boolean;
   contourInterval?: number;
+  satelliteTexture?: THREE.Texture | null;
 }
 
 export function TerrainChunk({
@@ -38,6 +39,7 @@ export function TerrainChunk({
   mapMode = 1.0,
   showContourLines = true,
   contourInterval = 15.0,
+  satelliteTexture = null,
 }: TerrainChunkProps) {
   const groupRef = useRef<THREE.Group>(null!);
 
@@ -90,6 +92,11 @@ export function TerrainChunk({
       mat.uniforms.mapMode.value = mapMode;
       mat.uniforms.showContourLines.value = showContourLines ? 1.0 : 0.0;
       mat.uniforms.contourInterval.value = contourInterval;
+      mat.uniforms.totalTerrainSize.value = totalSize;
+      if (satelliteTexture) {
+        mat.uniforms.satelliteMap.value = satelliteTexture;
+        mat.uniforms.hasSatelliteMap.value = 1.0;
+      }
 
       const mesh = new THREE.Mesh(geo, mat);
       mesh.receiveShadow = true;
@@ -99,7 +106,7 @@ export function TerrainChunk({
     });
 
     return lod;
-  }, [chunkSize, centerWorldX, centerWorldZ, elevationFn, snowElevation, rockSlopeAngle, wireframe, mapMode, showContourLines, contourInterval]);
+  }, [chunkSize, centerWorldX, centerWorldZ, elevationFn, snowElevation, rockSlopeAngle, wireframe, mapMode, showContourLines, contourInterval, totalSize, satelliteTexture]);
 
   // Update dynamic uniforms across all LOD level meshes
   useEffect(() => {
@@ -116,11 +123,16 @@ export function TerrainChunk({
           mesh.material.uniforms.mapMode.value = mapMode;
           mesh.material.uniforms.showContourLines.value = showContourLines ? 1.0 : 0.0;
           mesh.material.uniforms.contourInterval.value = contourInterval;
+          mesh.material.uniforms.totalTerrainSize.value = totalSize;
+          if (satelliteTexture) {
+            mesh.material.uniforms.satelliteMap.value = satelliteTexture;
+            mesh.material.uniforms.hasSatelliteMap.value = 1.0;
+          }
           mesh.material.wireframe = wireframe;
         }
       });
     }
-  }, [lodGroup, snowElevation, rockSlopeAngle, wireframe, mapMode, showContourLines, contourInterval]);
+  }, [lodGroup, snowElevation, rockSlopeAngle, wireframe, mapMode, showContourLines, contourInterval, totalSize, satelliteTexture]);
 
   // Cleanup geometries on unmount
   useEffect(() => {

@@ -74,6 +74,12 @@ Update this file after every meaningful implementation change or architectural d
   - [x] **Unit 11.6:** Embedded full Mapbox Simulator controls into the Layers drawer in `GoogleEarthDrawer.tsx` and updated `GoogleEarthTelemetry.tsx`.
   - [x] **Unit 11.7:** Imported Fergana Valley / Alay Range (`39.9066°N, 71.1716°E`, altitude 1,256m) as the primary default location with custom canyon and ridge terrain morphology in `MountainTerrain.tsx`.
   - [x] **Unit 11.8:** Boosted scene illumination in `EnvironmentRig.tsx` and `terrainShader.ts` (ambient intensity 1.5, sky-to-ground hemisphere light 1.4, primary sun 3.2, daylight fill light 1.4, counter-rim light 1.0, minimum 70% shadow luminance).
+- [x] **Phase 12: Photorealistic 3D Satellite Landscape & Sux Escarpment Overhaul** (Completed)
+  - [x] **Unit 12.1:** Built `satelliteTextureGenerator.ts` recreating the exact satellite landscape from the user's Google Earth view (agricultural green fields, Sux riverbed gravel wash, village compounds, buff limestone cliff face, and corrugated desert-mountain folds).
+  - [x] **Unit 12.2:** Re-engineered `MountainTerrain.tsx` elevation displacement for `fergana_alay` to create the 30m sheer diagonal escarpment wall, fertile valley basin, and parallel corrugated Kyrgyzstan erosion ridges.
+  - [x] **Unit 12.3:** Enabled seamless global world UV coordinates (`vWorldUv`) and satellite texture draping in `terrainShader.ts` and `TerrainChunk.tsx`.
+  - [x] **Unit 12.4:** Built `Earth3DBadges.tsx` rendering floating 3D Google Earth landmark pills and country border labels (`UZBEKISTAN`, `KYRGYZSTAN`, `Arekhis`, `Bogchi Zangat`, `School 22`, `Sux Tarix Muzeyi`).
+  - [x] **Unit 12.5:** Set camera position and OrbitControls target in `Viewport.tsx` and `EnvironmentRig.tsx` to directly frame the oblique ~58° aerial perspective from the user's reference image.
 
 ## Architecture Decisions
 

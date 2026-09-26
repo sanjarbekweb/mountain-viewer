@@ -84,9 +84,9 @@ const DEFAULT_GOOGLE_TILES_CONFIG: GoogleTilesConfig = {
 
 const DEFAULT_MAPBOX_CONFIG: MapboxConfig = {
   accessToken: "",
-  style: "light",
+  style: "satellite",
   exaggeration: 1.25,
-  showContourLines: true,
+  showContourLines: false,
   contourInterval: 20,
   showRoadsAndWater: true,
   status: "simulating",

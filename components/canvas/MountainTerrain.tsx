@@ -7,6 +7,7 @@ import { useSceneStore } from "@/lib/stores/useSceneStore";
 import { TerrainChunk } from "./TerrainChunk";
 import { Google3DTiles } from "./Google3DTiles";
 import { getLandmarkById } from "@/lib/terrain/earthLandmarks";
+import { generateFerganaSatelliteTexture } from "@/lib/terrain/satelliteTextureGenerator";
 import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from "three-mesh-bvh";
 
 // Extend Three.js prototype once
@@ -38,13 +39,21 @@ export const MountainTerrain = forwardRef<MountainTerrainHandle, MountainTerrain
     const CHUNK_GRID_COUNT = 4; // 4x4 chunked terrain
     const chunkSize = size / CHUNK_GRID_COUNT;
 
+    // Generate high-resolution photorealistic satellite texture for Fergana Sux
+    const satelliteTexture = useMemo(() => {
+      if (activeLocationId === "fergana_alay") {
+        return generateFerganaSatelliteTexture();
+      }
+      return null;
+    }, [activeLocationId]);
+
     // Determine shader map mode: 0 = Alpine, 1 = Mapbox Light, 2 = Mapbox Outdoors, 3 = Mapbox Satellite
     const shaderMapMode = useMemo(() => {
       if (mapSource === "mapbox_simulator") {
         if (mapboxConfig.style === "light") return 1.0;
         if (mapboxConfig.style === "outdoors") return 2.0;
         if (mapboxConfig.style === "satellite") return 3.0;
-        return 1.0;
+        return 3.0;
       }
       return 0.0;
     }, [mapSource, mapboxConfig.style]);
@@ -80,11 +89,36 @@ export const MountainTerrain = forwardRef<MountainTerrainHandle, MountainTerrain
         // Morphological shaping per landmark
         const distFromCenter = Math.sqrt(worldX * worldX + worldZ * worldZ) / half;
         if (activeLocationId === "fergana_alay") {
-          // Fergana / Shohimardon mountain gorge & terraced limestone ridge profile
-          const canyonAxis = Math.abs(worldX * 0.65 - worldZ * 0.75) / half;
-          const canyonCut = Math.exp(-canyonAxis * canyonAxis * 20.0) * 8.0;
-          const terracedRidges = Math.sin(worldX * 0.16 + worldZ * 0.12) * 4.5;
-          h = Math.max(h + terracedRidges - canyonCut, 2.0);
+          // Exact 3D landscape of Sux / Fergana gorge & Kyrgyzstan border escarpment
+          const normX = worldX / half;
+          const normZ = worldZ / half;
+
+          // Diagonal fault line / ridge cutting from top-left towards bottom-right
+          const ridgePos = -0.12 + normZ * 0.58 + Math.sin(normZ * 6.5) * 0.05;
+          const distToRidge = normX - ridgePos;
+
+          if (distToRidge < -0.06) {
+            // Western valley floor: fertile basin with Sux gravel riverbed depression
+            const riverPos = -0.52 + normZ * 0.42 + Math.sin(normZ * 5.0) * 0.07;
+            const distToRiver = Math.abs(normX - riverPos);
+            const riverTrench = Math.exp(-distToRiver * distToRiver * 80.0) * 3.5;
+            const valleyBase = 4.2 + (normZ + 1.0) * 1.8;
+            h = Math.max(valleyBase - riverTrench, 1.2);
+          } else if (distToRidge <= 0.08) {
+            // Massive 3D escarpment wall rising 30m sharply over narrow transition
+            const t = (distToRidge + 0.06) / 0.14; // 0 to 1
+            const smoothT = t * t * (3.0 - 2.0 * t);
+            const valleyH = 5.2;
+            const mountainH = 29.0 + Math.sin(normZ * 10.0) * 3.5;
+            h = valleyH + (mountainH - valleyH) * smoothT;
+          } else {
+            // Eastern folded arid mountains of Kyrgyzstan: parallel corrugated waves & erosion gullies
+            const gullyFreq = (normX * 0.7 - normZ * 0.7) * 20.0;
+            const gullyWave = Math.sin(gullyFreq) * 5.2 + Math.sin(gullyFreq * 2.1) * 2.2;
+            const strataWave = Math.sin(normX * 12.0 + normZ * 7.0) * 2.8;
+            const baseHigh = 26.5 + distToRidge * 14.0;
+            h = Math.max(baseHigh + gullyWave + strataWave, 18.0);
+          }
         } else if (activeLocationId === "mount_fuji") {
           // Conical volcano profile with central caldera crater
           const cone = Math.max(0, 1 - distFromCenter);
@@ -202,6 +236,7 @@ export const MountainTerrain = forwardRef<MountainTerrainHandle, MountainTerrain
             mapMode={shaderMapMode}
             showContourLines={mapboxConfig.showContourLines}
             contourInterval={mapboxConfig.contourInterval}
+            satelliteTexture={satelliteTexture}
           />
         ))}
 

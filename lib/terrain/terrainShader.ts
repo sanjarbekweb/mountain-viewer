@@ -41,21 +41,35 @@ export const MountainShaderMaterial = {
     mapboxOutdoorsGrass: { value: new THREE.Color("#9ed48b") },
     mapboxOutdoorsRock: { value: new THREE.Color("#d1d7dc") },
     mapboxOutdoorsContour: { value: new THREE.Color("#43613d") },
+
+    // Satellite drape uniforms
+    totalTerrainSize: { value: 160.0 },
+    satelliteMap: { value: null as THREE.Texture | null },
+    hasSatelliteMap: { value: 0.0 },
   },
   vertexShader: `
     varying vec3 vWorldPosition;
     varying vec3 vNormal;
     varying vec2 vUv;
+    varying vec2 vWorldUv;
+    uniform float totalTerrainSize;
 
     void main() {
       vUv = uv;
       vNormal = normalize(normalMatrix * normal);
       vec4 worldPos = modelMatrix * vec4(position, 1.0);
       vWorldPosition = worldPos.xyz;
+      // Seamless global texture coordinate across all 16 LOD chunks
+      float halfSize = max(totalTerrainSize * 0.5, 1.0);
+      vWorldUv = (worldPos.xz + vec2(halfSize)) / totalTerrainSize;
       gl_Position = projectionMatrix * viewMatrix * worldPos;
     }
   `,
   fragmentShader: `
+    uniform float totalTerrainSize;
+    uniform sampler2D satelliteMap;
+    uniform float hasSatelliteMap;
+    varying vec2 vWorldUv;
     uniform float snowElevation;
     uniform float rockSlopeThreshold;
     uniform vec3 sunDirection;
@@ -182,18 +196,30 @@ export const MountainShaderMaterial = {
         vec3 lit = surface * (sunLight * diff * 0.85 + totalAmbient * 1.15);
         finalColor = mix(surface, lit, 0.65);
       }
-      // MODE 3: MAPBOX SATELLITE (High-Albedo Aerial Photography Drape)
+      // MODE 3: MAPBOX SATELLITE (High-Resolution Aerial Orthophoto Drape)
       else if (mapMode >= 2.5) {
-        vec3 satValley = vec3(0.58, 0.70, 0.48);
-        vec3 satRock = vec3(0.80, 0.78, 0.74);
-        float slopeFactor = smoothstep(rockSlopeThreshold - 0.12, rockSlopeThreshold + 0.05, slope);
-        vec3 surface = mix(satRock, satValley, slopeFactor);
+        vec3 satColor = vec3(0.74, 0.72, 0.68);
+        if (hasSatelliteMap > 0.5) {
+          // Clamp UV coordinates to avoid border repetition
+          vec2 clampedUv = clamp(vWorldUv, 0.001, 0.999);
+          satColor = texture2D(satelliteMap, clampedUv).rgb;
+        } else {
+          vec3 satValley = vec3(0.58, 0.70, 0.48);
+          vec3 satRock = vec3(0.80, 0.78, 0.74);
+          float slopeFactor = smoothstep(rockSlopeThreshold - 0.12, rockSlopeThreshold + 0.05, slope);
+          satColor = mix(satRock, satValley, slopeFactor);
+        }
 
-        float snowStart = snowElevation - 3.0;
-        float snowBlend = smoothstep(snowStart, snowElevation + 4.0, elevation);
-        surface = mix(surface, snowColor, snowBlend * clamp(slope * 1.3, 0.0, 1.0));
+        // Apply realistic 3D sunlight hillshading relief
+        float hillshade = diff * 0.45 + 0.65;
+        vec3 lit = satColor * hillshade;
 
-        finalColor = surface * (sunLight * diff * 0.75 + totalAmbient * 1.1);
+        if (showContourLines > 0.5) {
+          float contour = getContourFactor(elevation, contourInterval);
+          lit = mix(lit, vec3(1.0), contour * 0.35);
+        }
+
+        finalColor = lit * (totalAmbient * 0.25 + vec3(0.85));
       }
       // MODE 0: ALPINE TOPO DEM (Bright Daylight Natural Alpine)
       else {

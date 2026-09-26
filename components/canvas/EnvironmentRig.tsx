@@ -64,10 +64,11 @@ export function EnvironmentRig() {
         color="#ffffff"
       />
 
-      {/* Camera Controls with Ground Clipping Prevention */}
+      {/* Camera Controls with Ground Clipping Prevention & Oblique 3D Framing */}
       <OrbitControls
         ref={controlsRef}
         makeDefault
+        target={[-6, 12, -8]}
         enabled={!isDraggingGizmo} // Disable when gizmo dragging
         maxPolarAngle={Math.PI / 2 - 0.04} // Prevents camera from dipping beneath terrain
         minDistance={5}

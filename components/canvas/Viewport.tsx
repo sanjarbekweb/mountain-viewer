@@ -8,6 +8,7 @@ import { MountainTerrain, MountainTerrainHandle } from "./MountainTerrain";
 import { PlacedEntity } from "./PlacedEntity";
 import { EnvironmentRig } from "./EnvironmentRig";
 import { PlacementGhost } from "./PlacementGhost";
+import { Earth3DBadges } from "./Earth3DBadges";
 import { calculateAdaptiveFoundation } from "@/lib/snapping/foundationCalculator";
 import { PlacedAsset } from "@/types/scene";
 
@@ -105,7 +106,7 @@ export function Viewport() {
     <div className="relative w-full h-full">
       <Canvas
         shadows
-        camera={{ position: [48, 38, 54], fov: 45 }}
+        camera={{ position: [36, 28, 56], fov: 48 }}
         gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
         onPointerMissed={() => selectAsset(null)}
       >
@@ -118,6 +119,9 @@ export function Viewport() {
           onTerrainClick={handleTerrainClick}
           onTerrainHover={handleTerrainHover}
         />
+
+        {/* 3D Google Earth Landmark Badges & Country Labels */}
+        <Earth3DBadges />
 
         {/* Real-time Cursor Snapping Ghost Preview */}
         <PlacementGhost position={ghostPos} normal={ghostNormal} />
