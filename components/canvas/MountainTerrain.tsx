@@ -5,6 +5,8 @@ import * as THREE from "three";
 import { generateAlpineFractalDEM } from "@/lib/terrain/demDecoder";
 import { useSceneStore } from "@/lib/stores/useSceneStore";
 import { TerrainChunk } from "./TerrainChunk";
+import { Google3DTiles } from "./Google3DTiles";
+import { getLandmarkById } from "@/lib/terrain/earthLandmarks";
 import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from "three-mesh-bvh";
 
 // Extend Three.js prototype once
@@ -28,15 +30,17 @@ export const MountainTerrain = forwardRef<MountainTerrainHandle, MountainTerrain
   function MountainTerrain({ onTerrainClick, onTerrainHover }, ref) {
     const collisionMeshRef = useRef<THREE.Mesh>(null!);
     const terrainConfig = useSceneStore((state) => state.terrainConfig);
+    const googleTilesConfig = useSceneStore((state) => state.googleTilesConfig);
 
-    const { size, maxElevation, snowElevation, rockSlopeAngle, wireframe } = terrainConfig;
+    const { size, maxElevation, snowElevation, rockSlopeAngle, wireframe, mapSource, activeLocationId } = terrainConfig;
+    const landmark = getLandmarkById(activeLocationId);
     const CHUNK_GRID_COUNT = 4; // 4x4 chunked terrain
     const chunkSize = size / CHUNK_GRID_COUNT;
 
-    // Generate high-resolution continuous elevation field
+    // Generate high-resolution continuous elevation field with morphological adjustments per landmark
     const { elevationGrid, elevationFn } = useMemo(() => {
       const resolution = 256;
-      const grid = generateAlpineFractalDEM(resolution, resolution, maxElevation);
+      const baseGrid = generateAlpineFractalDEM(resolution, resolution, maxElevation);
 
       const fn = (worldX: number, worldZ: number): number => {
         const half = size / 2;
@@ -55,13 +59,33 @@ export const MountainTerrain = forwardRef<MountainTerrainHandle, MountainTerrain
         const i11 = i01 + 1;
 
         // Bilinear interpolation for smooth derivative & normals
-        const h0 = grid.data[i00] * (1 - fx) + grid.data[i10] * fx;
-        const h1 = grid.data[i01] * (1 - fx) + grid.data[i11] * fx;
-        return h0 * (1 - fz) + h1 * fz;
+        const h0 = baseGrid.data[i00] * (1 - fx) + baseGrid.data[i10] * fx;
+        const h1 = baseGrid.data[i01] * (1 - fx) + baseGrid.data[i11] * fx;
+        let h = h0 * (1 - fz) + h1 * fz;
+
+        // Morphological shaping per landmark
+        const distFromCenter = Math.sqrt(worldX * worldX + worldZ * worldZ) / half;
+        if (activeLocationId === "mount_fuji") {
+          // Conical volcano profile with central caldera crater
+          const cone = Math.max(0, 1 - distFromCenter);
+          const crater = distFromCenter < 0.12 ? Math.cos((distFromCenter / 0.12) * Math.PI) * 4 : 0;
+          h = cone * maxElevation * 1.15 - crater;
+        } else if (activeLocationId === "yosemite_half_dome") {
+          // Sheer cliff face on one side (Z > 0)
+          if (worldZ > 4) {
+            h *= Math.max(0.1, 1 - (worldZ - 4) / 18);
+          }
+        } else if (activeLocationId === "matterhorn") {
+          // Pyramidal 4-ridge sharpening
+          const ridge = Math.abs(Math.sin(worldX * 0.15) * Math.cos(worldZ * 0.15));
+          h += ridge * 6;
+        }
+
+        return Math.max(h, 0);
       };
 
-      return { elevationGrid: grid, elevationFn: fn };
-    }, [size, maxElevation]);
+      return { elevationGrid: baseGrid, elevationFn: fn };
+    }, [size, maxElevation, activeLocationId]);
 
     // Build unified collision geometry with BVH tree for sub-0.2ms raycasting
     const collisionGeometry = useMemo(() => {
@@ -138,10 +162,15 @@ export const MountainTerrain = forwardRef<MountainTerrainHandle, MountainTerrain
 
     return (
       <group>
+        {/* Google 3D Tiles integration when active */}
+        {mapSource === "google_3d_tiles" && googleTilesConfig.apiKey && (
+          <Google3DTiles apiKey={googleTilesConfig.apiKey} />
+        )}
+
         {/* 4x4 Chunked LOD Terrain Meshes */}
         {chunks.map(({ cx, cz, key }) => (
           <TerrainChunk
-            key={key}
+            key={`${key}_${activeLocationId}`}
             chunkX={cx}
             chunkZ={cz}
             chunkSize={chunkSize}

@@ -1,7 +1,12 @@
 import { create } from "zustand";
-import { PlacedAsset, TransformMode, TerrainConfig } from "@/types/scene";
+import { PlacedAsset, TransformMode, TerrainConfig, ViewMode, GoogleTilesConfig } from "@/types/scene";
+import { getLandmarkById } from "@/lib/terrain/earthLandmarks";
 
 interface SceneStore {
+  // Navigation & View Mode
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
+
   // Asset Management
   assets: PlacedAsset[];
   selectedAssetId: string | null;
@@ -18,8 +23,9 @@ interface SceneStore {
     alignToNormal: boolean;
   } | null;
 
-  // Terrain Configuration
+  // Terrain & Google Earth Configuration
   terrainConfig: TerrainConfig;
+  googleTilesConfig: GoogleTilesConfig;
 
   // History (Undo / Redo)
   historyPast: PlacedAsset[][];
@@ -40,6 +46,8 @@ interface SceneStore {
   toggleLock: (id: string) => void;
 
   updateTerrainConfig: (updates: Partial<TerrainConfig>) => void;
+  setGoogleTilesConfig: (updates: Partial<GoogleTilesConfig>) => void;
+  selectLocation: (locationId: string) => void;
 
   undo: () => void;
   redo: () => void;
@@ -48,20 +56,33 @@ interface SceneStore {
 const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
   size: 160,
   segments: 192,
-  maxElevation: 38,
+  maxElevation: 42,
   wireframe: false,
   showLOD: true,
   snowElevation: 24,
   rockSlopeAngle: 28,
+  mapSource: "procedural_alpine",
+  activeLocationId: "matterhorn",
+};
+
+const DEFAULT_GOOGLE_TILES_CONFIG: GoogleTilesConfig = {
+  apiKey: "",
+  quality: "high",
+  maxDepth: 18,
+  showAttribution: true,
+  status: "idle",
 };
 
 export const useSceneStore = create<SceneStore>((set, get) => ({
+  viewMode: "dashboard", // default to modern Google Earth 3D Explorer dashboard
+  setViewMode: (mode) => set({ viewMode: mode }),
+
   assets: [
     {
       id: "preset-alpine-lodge",
       name: "Alpine Timber Lodge",
       sourceUrl: "/models/sample_cabin.glb",
-      thumbnailUrl: "",
+      thumbnailUrl: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=400&q=80",
       type: "cabin",
       position: [12, 11.2, -8],
       rotation: [0, 0.4, 0],
@@ -81,7 +102,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
       id: "preset-lookout-tower",
       name: "Panoramic Lookout Tower",
       sourceUrl: "/models/sample_tower.glb",
-      thumbnailUrl: "",
+      thumbnailUrl: "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=400&q=80",
       type: "tower",
       position: [-24, 21.8, 16],
       rotation: [0, -0.6, 0],
@@ -104,6 +125,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   isDraggingGizmo: false,
   assetToPlace: null,
   terrainConfig: DEFAULT_TERRAIN_CONFIG,
+  googleTilesConfig: DEFAULT_GOOGLE_TILES_CONFIG,
   historyPast: [],
   historyFuture: [],
 
@@ -129,8 +151,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   },
 
   updateAsset: (id, updates) => {
-    const { assets, historyPast } = get();
-    // Only snapshot history if position/rotation/scale changed and not in middle of drag
+    const { assets } = get();
     const updated = assets.map((a) => (a.id === id ? { ...a, ...updates } : a));
     set({
       assets: updated,
@@ -186,6 +207,23 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   updateTerrainConfig: (updates) => {
     set((state) => ({
       terrainConfig: { ...state.terrainConfig, ...updates },
+    }));
+  },
+
+  setGoogleTilesConfig: (updates) => {
+    set((state) => ({
+      googleTilesConfig: { ...state.googleTilesConfig, ...updates },
+    }));
+  },
+
+  selectLocation: (locationId) => {
+    const landmark = getLandmarkById(locationId);
+    set((state) => ({
+      terrainConfig: {
+        ...state.terrainConfig,
+        activeLocationId: locationId,
+        maxElevation: landmark.elevationScale,
+      },
     }));
   },
 

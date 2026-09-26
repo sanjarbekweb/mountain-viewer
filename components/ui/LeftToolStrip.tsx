@@ -70,7 +70,7 @@ export function LeftToolStrip({
               aria-label={`${tool.label} (${tool.shortcut})`}
               className={`w-11 h-11 flex items-center justify-center transition-colors border-l-2 ${
                 isActive
-                  ? "border-cyan-400 bg-slate-800/80 text-cyan-400"
+                  ? "border-indigo-400 bg-[#172033] text-indigo-400"
                   : "border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
               }`}
             >
@@ -104,7 +104,7 @@ export function LeftToolStrip({
           aria-label="Toggle Wireframe"
           className={`w-11 h-11 flex items-center justify-center transition-colors border-l-2 ${
             isWireframeActive
-              ? "border-cyan-400 bg-slate-800/80 text-cyan-400"
+              ? "border-indigo-400 bg-[#172033] text-indigo-400"
               : "border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
           }`}
         >

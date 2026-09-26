@@ -40,7 +40,24 @@ Update this file after every meaningful implementation change or architectural d
 - [x] **Unit 4.2:** Built `Sidebar.tsx` (Asset Library, Custom GLB Model Importer & Scene Hierarchy tree with visibility/lock/duplicate/delete) and `InspectorPanel.tsx` (live transform coords and foundation plinth depth controls).
 - [x] **Unit 4.3:** Built `sceneExporter.ts` and wired one-click `.glb` scene export.
 - [x] **Unit 5.1:** Created `scripts/generate-sample-assets.mjs` and generated `sample_cabin.glb`, `sample_tower.glb`, and `public/heightmap.png`.
-- [x] Verified full production compilation (`npm run build`) passing cleanly with Turbopack in 2.3s with zero type or build errors.
+- [x] **Phase 6: AETHERIS UI Redesign** (Completed)
+  - [x] **Unit 6.1:** Built `TopMenuBar.tsx` — desktop-app title bar with gradient icon branding + horizontal menu strip (File, Edit, AI Tools, View, Terrain, Settings) + right-side action icons (Help, Settings, Share, User avatar).
+  - [x] **Unit 6.2:** Built `LeftToolStrip.tsx` — thin 44px vertical icon toolbar with grouped tool modes (Select/Translate/Rotate/Scale, Terrain/Wireframe, Asset Library/AI Generator, Camera/Cloud Status) using active cyan border highlights.
+  - [x] **Unit 6.3:** Built `RightPanel.tsx` — unified accordion panel with collapsible sections (Scene Controls with LOD/Snow/Wireframe sliders, Cloud AI Generator with upload dropzone and progress bar, Scene Tree with visibility/lock/delete controls, Asset Inspector with position/rotation/scale/foundation inputs).
+  - [x] **Unit 6.4:** Built `FpsBadge.tsx` — real-time FPS counter with WebGL and LOD: DYNAMIC status pill in viewport top-right.
+  - [x] **Unit 6.5:** Updated `globals.css` with AETHERIS dark navy theme (`#0d1117` backgrounds, `#161b22` panels, `#58a6ff` accents) and custom range slider / scrollbar styling.
+  - [x] **Unit 6.6:** Rewired `page.tsx` layout — top chrome → left tool strip → viewport (inset) → right panel → bottom status ribbon.
+  - [x] **Unit 6.7:** Global keyboard shortcuts (Q/W/E/R transform modes, Ctrl+Z/Y undo/redo) with input field guard.
+  - [x] Verified TypeScript strict check + production build with zero errors.
+  - [x] Committed and pushed both phases to `origin/main`.
+- [x] **Unit 7.1:** Authored comprehensive, production-grade `README.md` following the curated standards of `awesome-github-profile-readme` (shields.io badges, ASCII visual branding, AETHERIS architecture diagram, feature deep-dives, invariants table, tech stack matrix, keyboard shortcuts, and project structure).
+- [x] **Phase 8: Google Earth 3D Map Integration & Reference Design Overhaul** (Completed)
+  - [x] **Unit 8.1:** Integrated `3d-tiles-renderer` and `GoogleCloudAuthPlugin` in `Google3DTiles.tsx` for streaming Google Maps Platform Photorealistic 3D Tiles.
+  - [x] **Unit 8.2:** Built `earthLandmarks.ts` with real-world mountain database (Matterhorn, Mont Blanc, Mount Fuji, Yosemite Half Dome, Tre Cime Dolomites, Mount Everest) with true GPS coordinates, peak elevations, and morphological terrain shaping.
+  - [x] **Unit 8.3:** Built `EarthDashboard.tsx` matching the user's reference image design (`media_1790401066528.jpg`): pill search bar, profile badge, hero banner card, "Trending Mountain Sites 🔥" grid, active scene structures, live 3D stream card with play overlay, and telemetry physics panel.
+  - [x] **Unit 8.4:** Built `AppSidebar.tsx` with modern rounded pill navigation (Earth 3D & Peaks vs 3D Studio vs AI 3D Generator).
+  - [x] **Unit 8.5:** Seamlessly integrated `viewMode` switching in `useSceneStore.ts` and `page.tsx` between the full-screen Earth Dashboard and 3D Studio Canvas.
+  - [x] **Unit 8.6:** Verified TypeScript compilation and production build (`npm run build`) passing in 3.8s with zero errors.
 
 ## Architecture Decisions
 
@@ -50,7 +67,11 @@ Update this file after every meaningful implementation change or architectural d
 - **ADR-004: OrbitControls Conflict Avoidance:** Wire `dragging-changed` in `TransformControls` to disable camera orbit during gizmo interactions.
 - **ADR-005: Dual Snapping Modes:** Architecture structures stay upright on world $Y$-axis with subterranean plinths; props align to terrain normal vector.
 - **ADR-006: Invariant 3 Pivot Normalization:** Every loaded GLB dynamically recenters on $X/Z$ and aligns base $Y_{min} = 0$ upon ingestion.
+- **ADR-007: AETHERIS Desktop Chrome Pattern:** Replaced floating glassmorphic panels with fixed desktop-app chrome (title bar + menu bar + left icon strip + right accordion panel) for professional CAD aesthetics.
+- **ADR-008: Google Earth 3D Tiles & Dual Mode Architecture:** Integrated OGC 3D Tiles streaming with real-world geographic landmarks and dual-view mode (Dashboard Explorer vs 3D Studio).
 
 ## Session Notes
 
-- Project is fully implemented, verified, and ready for development server preview via `npm run dev`.
+- Project is fully implemented with AETHERIS-style UI, verified, and running via `npm run dev` at `http://localhost:3000`.
+- Authored full `README.md` documentation aligned with the project's architectural invariants and curated open-source repository presentation standards.
+- Git commits: `bc2ca5a` (Phase 1-4 core), `7bb032c` (Phase 6 AETHERIS UI redesign).

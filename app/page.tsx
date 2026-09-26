@@ -3,8 +3,10 @@
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import { TopMenuBar } from "@/components/ui/TopMenuBar";
+import { AppSidebar } from "@/components/ui/AppSidebar";
 import { LeftToolStrip } from "@/components/ui/LeftToolStrip";
 import { RightPanel } from "@/components/ui/RightPanel";
+import { EarthDashboard } from "@/components/dashboard/EarthDashboard";
 import { ModelGenerationModal } from "@/components/ui/ModelGenerationModal";
 import FpsBadge from "@/components/ui/FpsBadge";
 import { exportSceneToGLB } from "@/lib/export/sceneExporter";
@@ -21,6 +23,8 @@ export default function MountainArchitectPage() {
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  const viewMode = useSceneStore((state) => state.viewMode);
+  const setViewMode = useSceneStore((state) => state.setViewMode);
   const assets = useSceneStore((state) => state.assets);
 
   const showToast = (msg: string) => {
@@ -72,33 +76,56 @@ export default function MountainArchitectPage() {
   };
 
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-[#0d1117] font-sans select-none flex flex-col">
-      {/* ─── Top Chrome: Title Bar + Menu ─── */}
+    <main className="relative w-screen h-screen overflow-hidden bg-[#0a0e17] font-sans select-none flex flex-col">
+      {/* ─── Top Chrome: Title Bar + Location Badge + View Switcher ─── */}
       <TopMenuBar
         onOpenAIModal={() => setIsAIModalOpen(true)}
         onExportScene={handleExportScene}
       />
 
-      {/* ─── Main Content Area (below chrome) ─── */}
-      <div className="relative flex-1 overflow-hidden">
-        {/* 3D WebGL Canvas Viewport — fills available space */}
-        <div className="absolute inset-0 pl-11 pr-72">
-          <Viewport />
-
-          {/* FPS / WebGL / LOD Badge (inside viewport area) */}
-          <FpsBadge />
-        </div>
-
-        {/* Left Vertical Tool Strip */}
-        <LeftToolStrip
-          onOpenAssetLibrary={() => {}}
+      {/* ─── Main Content Area with Sidebar ─── */}
+      <div className="relative flex-1 flex overflow-hidden">
+        {/* Left Navigation Bar (matching reference design) */}
+        <AppSidebar
           onOpenAIModal={() => setIsAIModalOpen(true)}
         />
 
-        {/* Right Panel: Scene Controls + AI Generator + Tree + Inspector */}
-        <RightPanel
-          onStartGeneration={() => setIsAIModalOpen(true)}
-        />
+        {/* Dynamic View: Earth 3D Dashboard vs 3D Studio Canvas */}
+        {viewMode === "dashboard" ? (
+          <EarthDashboard
+            onOpenAIModal={() => setIsAIModalOpen(true)}
+            onEnterStudio={() => setViewMode("studio")}
+          />
+        ) : (
+          <div className="relative flex-1 overflow-hidden">
+            {/* 3D WebGL Canvas Viewport — fills available studio space */}
+            <div className="absolute inset-0 pl-11 pr-80">
+              <Viewport />
+
+              {/* FPS / WebGL / LOD Badge (inside viewport area) */}
+              <FpsBadge />
+            </div>
+
+            {/* Left Vertical Tool Strip for 3D Studio */}
+            <LeftToolStrip
+              onOpenAIModal={() => setIsAIModalOpen(true)}
+            />
+
+            {/* Right Panel: Scene Controls + AI Generator + Tree + Inspector */}
+            <RightPanel
+              onStartGeneration={() => setIsAIModalOpen(true)}
+            />
+
+            {/* Bottom Status Ribbon */}
+            <div className="absolute bottom-2 left-14 z-10 pointer-events-none text-[10px] text-slate-400 font-mono flex items-center gap-2 bg-[#0d111b]/80 backdrop-blur-md px-3 py-1 rounded-full border border-slate-800">
+              <span>Google Earth 3D & DEM</span>
+              <span className="text-slate-600">•</span>
+              <span>BVH Continuous Raycast Active</span>
+              <span className="text-slate-600">•</span>
+              <span>LOD Dynamic Chunks</span>
+            </div>
+          </div>
+        )}
 
         {/* AI Concept to 3D Synthesis Modal (overlay) */}
         <ModelGenerationModal
@@ -108,19 +135,10 @@ export default function MountainArchitectPage() {
 
         {/* Toast Notification */}
         {toastMessage && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-lg bg-[#161b22]/95 border border-slate-700/80 text-cyan-300 text-xs font-medium shadow-2xl backdrop-blur-md pointer-events-none">
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-full bg-indigo-950/90 border border-indigo-500/50 text-indigo-200 text-xs font-semibold shadow-2xl backdrop-blur-md pointer-events-none animate-fade-in">
             {toastMessage}
           </div>
         )}
-
-        {/* Bottom Status Ribbon */}
-        <div className="absolute bottom-1.5 left-14 z-10 pointer-events-none text-[9px] text-slate-500/70 font-mono flex items-center gap-2">
-          <span>BVH Spatial Index: Active</span>
-          <span className="text-slate-700">•</span>
-          <span>DEM: Alpine Ridged Multi-fractal</span>
-          <span className="text-slate-700">•</span>
-          <span>Next.js + R3F + three-mesh-bvh</span>
-        </div>
       </div>
     </main>
   );
