@@ -42,10 +42,33 @@ export const MountainTerrain = forwardRef<MountainTerrainHandle, MountainTerrain
     // Generate high-resolution photorealistic satellite texture for Fergana Sux
     const satelliteTexture = useMemo(() => {
       if (activeLocationId === "fergana_alay") {
+        if (mapboxConfig.accessToken && typeof window !== "undefined") {
+          const loader = new THREE.TextureLoader();
+          const url = `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/${landmark.lng},${landmark.lat},13.2,0,0/1024x1024?access_token=${mapboxConfig.accessToken}`;
+          try {
+            const liveTex = loader.load(
+              url,
+              () => {
+                liveTex.needsUpdate = true;
+              },
+              undefined,
+              (err) => {
+                console.warn("Using procedural satellite texture fallback:", err);
+              }
+            );
+            liveTex.wrapS = THREE.ClampToEdgeWrapping;
+            liveTex.wrapT = THREE.ClampToEdgeWrapping;
+            liveTex.minFilter = THREE.LinearMipmapLinearFilter;
+            liveTex.magFilter = THREE.LinearFilter;
+            return liveTex;
+          } catch {
+            return generateFerganaSatelliteTexture();
+          }
+        }
         return generateFerganaSatelliteTexture();
       }
       return null;
-    }, [activeLocationId]);
+    }, [activeLocationId, mapboxConfig.accessToken, landmark.lng, landmark.lat]);
 
     // Determine shader map mode: 0 = Alpine, 1 = Mapbox Light, 2 = Mapbox Outdoors, 3 = Mapbox Satellite
     const shaderMapMode = useMemo(() => {

@@ -80,6 +80,7 @@ Update this file after every meaningful implementation change or architectural d
   - [x] **Unit 12.3:** Enabled seamless global world UV coordinates (`vWorldUv`) and satellite texture draping in `terrainShader.ts` and `TerrainChunk.tsx`.
   - [x] **Unit 12.4:** Built `Earth3DBadges.tsx` rendering floating 3D Google Earth landmark pills and country border labels (`UZBEKISTAN`, `KYRGYZSTAN`, `Arekhis`, `Bogchi Zangat`, `School 22`, `Sux Tarix Muzeyi`).
   - [x] **Unit 12.5:** Set camera position and OrbitControls target in `Viewport.tsx` and `EnvironmentRig.tsx` to directly frame the oblique ~58° aerial perspective from the user's reference image.
+  - [x] **Unit 12.6:** Configured user's Mapbox access token as default in `useSceneStore.ts` and enabled live Mapbox satellite static imagery tile streaming in `MountainTerrain.tsx`.
 
 ## Architecture Decisions
 

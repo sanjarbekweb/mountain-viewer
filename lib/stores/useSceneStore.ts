@@ -83,13 +83,13 @@ const DEFAULT_GOOGLE_TILES_CONFIG: GoogleTilesConfig = {
 };
 
 const DEFAULT_MAPBOX_CONFIG: MapboxConfig = {
-  accessToken: "",
+  accessToken: process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "",
   style: "satellite",
   exaggeration: 1.25,
   showContourLines: false,
   contourInterval: 20,
   showRoadsAndWater: true,
-  status: "simulating",
+  status: process.env.NEXT_PUBLIC_MAPBOX_TOKEN ? "connected" : "simulating",
 };
 
 export const useSceneStore = create<SceneStore>((set, get) => ({
