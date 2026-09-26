@@ -195,6 +195,17 @@ export function GoogleEarthDrawer({ onOpenAIModal }: GoogleEarthDrawerProps) {
                       {keySaved ? <Check className="w-3.5 h-3.5" /> : "Apply"}
                     </button>
                   </div>
+
+                  {googleTilesConfig.status === "error" && (
+                    <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-[11px] space-y-1 mt-2">
+                      <div className="font-semibold">Error 403 (Forbidden)</div>
+                      <div className="text-[10px] text-gray-500 dark:text-gray-300 leading-tight space-y-0.5">
+                        <p>1. Enable <strong>Map Tiles API</strong> in Google Cloud Console.</p>
+                        <p>2. Ensure key allows <strong>Map Tiles API</strong> and <code>localhost:3000</code>.</p>
+                        <p>3. Ensure a billing account is linked to your project.</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Terrain Sliders */}
