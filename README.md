@@ -116,6 +116,17 @@ Placing 3D buildings on steep terrain in standard 3D tools often results in awkw
 - Packages all placed structures, adaptive concrete plinths, and terrain geometry into a unified binary `.glb` file using Three.js `GLTFExporter`.
 - Retains mesh hierarchy, names, and precise spatial transformations for seamless import into Blender, Maya, Unreal Engine, and WebGL viewers.
 
+### 🌍 7. Google Earth Photorealistic 3D Tiles & World Landmarks
+- **Google Cloud 3D Tiles Integration:** Powered by `3d-tiles-renderer` and `GoogleCloudAuthPlugin` streaming real-world 3D geodata directly from Google Maps Platform.
+- **Global Landmark Registry:** Instant teleportation to iconic summits with calibrated real-world GPS coordinates and elevation morphology:
+  - 🇨🇭 **Matterhorn Peak** (Pennine Alps, Switzerland — 4,478m)
+  - 🇫🇷 **Mont Blanc Massif** (Chamonix Valley, France / Italy — 4,808m)
+  - 🇯🇵 **Mount Fuji** (Honshu Island, Japan — 3,776m)
+  - 🇺🇸 **El Capitan / Yosemite** (Sierra Nevada, California — 2,307m)
+  - 🇮🇹 **Tre Cime di Lavaredo** (Dolomites, Italy — 2,999m)
+  - 🇳🇵 **Mount Everest / Sagarmatha** (Himalayas, Nepal — 8,848m)
+- **Modern Earth Dashboard:** Sleek navigation portal featuring a search bar, active structure counter, site statistics, and seamless switching between the global summit browser and local 3D CAD Studio.
+
 ---
 
 ## 🖥️ Interface Architecture (AETHERIS)
@@ -173,6 +184,7 @@ Mountain Viewer is built with strict architectural boundaries to guarantee 60 FP
 | **3D Engine** | **Three.js (r186)** | Core WebGL scenegraph, materials, shaders, and geometry |
 | **React 3D Bridge** | **@react-three/fiber (R3F)** | Declarative Three.js components and render loop |
 | **3D Helpers** | **@react-three/drei** | `TransformControls`, `OrbitControls`, `Sky`, `LOD` |
+| **Photorealistic 3D Tiles**| **3d-tiles-renderer** | Google Photorealistic 3D Tiles streaming & auth plugin |
 | **Spatial Indexing** | **three-mesh-bvh** | Fast Bounding Volume Hierarchy raycasting (<0.2ms) |
 | **State Management** | **Zustand 5** | High-performance, lightweight reactive state store |
 | **Styling & Icons** | **Tailwind CSS v4 + Lucide** | Modern dark CAD aesthetic, typography, and icon set |
@@ -207,19 +219,23 @@ mountain-viewer/
 │   │   └── generate-model/
 │   │       ├── dispatch/route.ts      # Async AI task initiation
 │   │       └── status/route.ts        # Polling endpoint for task progress
-│   ├── globals.css                    # AETHERIS dark CAD theme & custom sliders
+│   ├── globals.css                    # Modern CAD theme, electric accents & custom sliders
 │   ├── layout.tsx                     # Root Next.js layout & typography
-│   └── page.tsx                       # Main CAD workstation orchestrator
+│   └── page.tsx                       # Main CAD workstation & Earth portal orchestrator
 ├── components/
 │   ├── canvas/                        # React Three Fiber WebGL Components
 │   │   ├── AssetPlinth.tsx            # Adaptive subterranean concrete foundation
 │   │   ├── EnvironmentRig.tsx         # Alpine sun, procedural sky & height fog
+│   │   ├── Google3DTiles.tsx          # Google Photorealistic 3D Tiles integration
 │   │   ├── MountainTerrain.tsx        # 4x4 chunked grid & BVH mesh wrapper
 │   │   ├── PlacedEntity.tsx           # Instantiated asset with TransformControls
 │   │   ├── PlacementGhost.tsx         # Holographic cursor snapping preview
 │   │   ├── TerrainChunk.tsx           # Individual chunk LOD mesh
 │   │   └── Viewport.tsx               # Main WebGL Canvas with camera rigs
+│   ├── dashboard/                     # Earth 3D Exploration Portal
+│   │   └── EarthDashboard.tsx         # Mountain summit cards, GPS stats & quick teleport
 │   └── ui/                            # DOM Overlay UI Components
+│       ├── AppSidebar.tsx             # Collapsible left navigation (Earth 3D vs Studio)
 │       ├── FpsBadge.tsx               # Real-time FPS & WebGL status counter
 │       ├── LeftToolStrip.tsx          # 44px vertical CAD tool palette
 │       ├── ModelGenerationModal.tsx   # AI 2D-to-3D concept upload & progress
@@ -236,6 +252,7 @@ mountain-viewer/
 │   │   └── useSceneStore.ts           # Central Zustand store (entities, history)
 │   └── terrain/
 │       ├── demDecoder.ts              # Ridged multi-fractal & Mapbox DEM decoder
+│       ├── earthLandmarks.ts          # Calibrated mountain database with GPS coordinates
 │       └── terrainShader.ts           # Triplanar slope-splatting GLSL material
 ├── public/
 │   ├── heightmap.png                  # Sample digital elevation map
@@ -289,6 +306,10 @@ npm run start
 Create a `.env.local` file in the root directory to enable cloud generative 3D providers:
 
 ```env
+# Google Photorealistic 3D Tiles API Key (Optional)
+# Enables real-world 3D mesh streaming from Google Maps Platform
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+
 # Cloud Generative 3D Provider API Keys (Optional)
 # If omitted, Mountain Viewer automatically activates its built-in procedural model generator.
 MESHY_API_KEY=your_meshy_api_key_here
