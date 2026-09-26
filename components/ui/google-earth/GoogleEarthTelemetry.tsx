@@ -9,6 +9,7 @@ export function GoogleEarthTelemetry() {
   const theme = useSceneStore((state) => state.theme);
   const activeLocationId = useSceneStore((state) => state.terrainConfig.activeLocationId);
   const mapSource = useSceneStore((state) => state.terrainConfig.mapSource);
+  const mapboxConfig = useSceneStore((state) => state.mapboxConfig);
   const landmark = getLandmarkById(activeLocationId);
 
   const isLight = theme === "light";
@@ -44,7 +45,13 @@ export function GoogleEarthTelemetry() {
       <span className="mx-2 text-gray-400">•</span>
       <span>elev {landmark.altitude.toLocaleString()}m</span>
       <span className="mx-2 text-gray-400">•</span>
-      <span>{mapSource === "google_3d_tiles" ? "Google 3D Tiles" : "Topo DEM"}</span>
+      <span>
+        {mapSource === "mapbox_simulator"
+          ? `Mapbox 3D (${mapboxConfig.style})`
+          : mapSource === "google_3d_tiles"
+          ? "Google 3D Tiles"
+          : "Alpine Topo DEM"}
+      </span>
       <span className="mx-2 text-gray-400">•</span>
       <span>{fps} FPS</span>
     </div>

@@ -21,6 +21,9 @@ interface TerrainChunkProps {
   snowElevation: number;
   rockSlopeAngle: number;
   wireframe: boolean;
+  mapMode?: number;
+  showContourLines?: boolean;
+  contourInterval?: number;
 }
 
 export function TerrainChunk({
@@ -32,6 +35,9 @@ export function TerrainChunk({
   snowElevation,
   rockSlopeAngle,
   wireframe,
+  mapMode = 1.0,
+  showContourLines = true,
+  contourInterval = 15.0,
 }: TerrainChunkProps) {
   const groupRef = useRef<THREE.Group>(null!);
 
@@ -81,6 +87,9 @@ export function TerrainChunk({
       const rad = (rockSlopeAngle * Math.PI) / 180;
       mat.uniforms.rockSlopeThreshold.value = Math.cos(rad);
       mat.uniforms.isWireframe.value = wireframe ? 1.0 : 0.0;
+      mat.uniforms.mapMode.value = mapMode;
+      mat.uniforms.showContourLines.value = showContourLines ? 1.0 : 0.0;
+      mat.uniforms.contourInterval.value = contourInterval;
 
       const mesh = new THREE.Mesh(geo, mat);
       mesh.receiveShadow = true;
@@ -90,7 +99,7 @@ export function TerrainChunk({
     });
 
     return lod;
-  }, [chunkSize, centerWorldX, centerWorldZ, elevationFn, snowElevation, rockSlopeAngle, wireframe]);
+  }, [chunkSize, centerWorldX, centerWorldZ, elevationFn, snowElevation, rockSlopeAngle, wireframe, mapMode, showContourLines, contourInterval]);
 
   // Update dynamic uniforms across all LOD level meshes
   useEffect(() => {
@@ -104,11 +113,14 @@ export function TerrainChunk({
           mesh.material.uniforms.snowElevation.value = snowElevation;
           mesh.material.uniforms.rockSlopeThreshold.value = cosAngle;
           mesh.material.uniforms.isWireframe.value = wireframe ? 1.0 : 0.0;
+          mesh.material.uniforms.mapMode.value = mapMode;
+          mesh.material.uniforms.showContourLines.value = showContourLines ? 1.0 : 0.0;
+          mesh.material.uniforms.contourInterval.value = contourInterval;
           mesh.material.wireframe = wireframe;
         }
       });
     }
-  }, [lodGroup, snowElevation, rockSlopeAngle, wireframe]);
+  }, [lodGroup, snowElevation, rockSlopeAngle, wireframe, mapMode, showContourLines, contourInterval]);
 
   // Cleanup geometries on unmount
   useEffect(() => {

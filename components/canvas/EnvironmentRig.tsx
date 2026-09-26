@@ -14,44 +14,44 @@ export function EnvironmentRig() {
 
   return (
     <>
-      {/* Google Earth Style Atmosphere & Sky */}
+      {/* Google Earth / Mapbox Daylight Atmosphere & Sky */}
       <Sky
         distance={450000}
-        sunPosition={isLight ? [50, 60, 40] : [20, 25, 15]}
-        turbidity={isLight ? 4 : 8}
-        rayleigh={isLight ? 0.8 : 2.5}
-        mieCoefficient={0.005}
-        mieDirectionalG={0.8}
+        sunPosition={isLight ? [50, 70, 40] : [30, 40, 25]}
+        turbidity={isLight ? 2.5 : 6}
+        rayleigh={isLight ? 0.5 : 1.8}
+        mieCoefficient={0.003}
+        mieDirectionalG={0.85}
       />
 
-      {/* Atmospheric Depth Fog */}
-      <fog attach="fog" args={[isLight ? "#dce6f2" : "#11141c", 40, 260]} />
+      {/* Atmospheric Depth Fog (Crisp Daylight Horizon) */}
+      <fog attach="fog" args={[isLight ? "#eef4f9" : "#1a1e28", 60, 320]} />
 
-      {/* Ambient Fill Light */}
-      <ambientLight intensity={isLight ? 0.75 : 0.45} />
+      {/* Luminous Ambient Fill Light */}
+      <ambientLight intensity={isLight ? 1.1 : 0.75} />
 
       {/* Primary Sunlight */}
       <directionalLight
-        position={[60, 60, 40]}
-        intensity={isLight ? 2.2 : 1.6}
-        color={isLight ? "#ffffff" : "#e0e7ff"}
+        position={[65, 75, 45]}
+        intensity={isLight ? 2.4 : 1.8}
+        color={isLight ? "#ffffff" : "#f1f5f9"}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
         shadow-camera-near={0.5}
-        shadow-camera-far={260}
-        shadow-camera-left={-80}
-        shadow-camera-right={80}
-        shadow-camera-top={80}
-        shadow-camera-bottom={-80}
+        shadow-camera-far={280}
+        shadow-camera-left={-90}
+        shadow-camera-right={90}
+        shadow-camera-top={90}
+        shadow-camera-bottom={-90}
         shadow-bias={-0.0004}
       />
 
       {/* Skylight Fill from opposite side */}
       <directionalLight
-        position={[-40, 20, -30]}
-        intensity={isLight ? 0.5 : 0.3}
-        color={isLight ? "#bae6fd" : "#818cf8"}
+        position={[-40, 30, -35]}
+        intensity={isLight ? 0.75 : 0.45}
+        color={isLight ? "#dbeafe" : "#93c5fd"}
       />
 
       {/* Camera Controls with Ground Clipping Prevention */}

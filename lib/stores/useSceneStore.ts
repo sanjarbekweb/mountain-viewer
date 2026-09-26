@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { PlacedAsset, TransformMode, TerrainConfig, GoogleTilesConfig, ThemeMode } from "@/types/scene";
+import { PlacedAsset, TransformMode, TerrainConfig, GoogleTilesConfig, ThemeMode, MapboxConfig } from "@/types/scene";
 import { getLandmarkById } from "@/lib/terrain/earthLandmarks";
 
 export type ActivePanelType = "none" | "search" | "layers" | "projects" | "ai" | "inspector";
@@ -30,9 +30,10 @@ interface SceneStore {
     alignToNormal: boolean;
   } | null;
 
-  // Terrain & Google Earth Configuration
+  // Terrain, Mapbox Simulator & Google Earth Configuration
   terrainConfig: TerrainConfig;
   googleTilesConfig: GoogleTilesConfig;
+  mapboxConfig: MapboxConfig;
 
   // History (Undo / Redo)
   historyPast: PlacedAsset[][];
@@ -54,6 +55,7 @@ interface SceneStore {
 
   updateTerrainConfig: (updates: Partial<TerrainConfig>) => void;
   setGoogleTilesConfig: (updates: Partial<GoogleTilesConfig>) => void;
+  updateMapboxConfig: (updates: Partial<MapboxConfig>) => void;
   selectLocation: (locationId: string) => void;
 
   undo: () => void;
@@ -68,7 +70,7 @@ const DEFAULT_TERRAIN_CONFIG: TerrainConfig = {
   showLOD: true,
   snowElevation: 24,
   rockSlopeAngle: 28,
-  mapSource: "procedural_alpine",
+  mapSource: "mapbox_simulator",
   activeLocationId: "matterhorn",
 };
 
@@ -80,13 +82,27 @@ const DEFAULT_GOOGLE_TILES_CONFIG: GoogleTilesConfig = {
   status: "idle",
 };
 
+const DEFAULT_MAPBOX_CONFIG: MapboxConfig = {
+  accessToken: "",
+  style: "light",
+  exaggeration: 1.25,
+  showContourLines: true,
+  contourInterval: 20,
+  showRoadsAndWater: true,
+  status: "simulating",
+};
+
 export const useSceneStore = create<SceneStore>((set, get) => ({
-  theme: "dark",
+  theme: "light",
   setTheme: (theme) => set({ theme }),
   toggleTheme: () => set((state) => ({ theme: state.theme === "dark" ? "light" : "dark" })),
 
   activePanel: "none",
   setActivePanel: (panel) => set({ activePanel: panel }),
+
+  terrainConfig: DEFAULT_TERRAIN_CONFIG,
+  googleTilesConfig: DEFAULT_GOOGLE_TILES_CONFIG,
+  mapboxConfig: DEFAULT_MAPBOX_CONFIG,
 
   assets: [
     {
@@ -135,8 +151,6 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   snapMode: "gravity_upright",
   isDraggingGizmo: false,
   assetToPlace: null,
-  terrainConfig: DEFAULT_TERRAIN_CONFIG,
-  googleTilesConfig: DEFAULT_GOOGLE_TILES_CONFIG,
   historyPast: [],
   historyFuture: [],
 
@@ -226,6 +240,12 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   setGoogleTilesConfig: (updates) => {
     set((state) => ({
       googleTilesConfig: { ...state.googleTilesConfig, ...updates },
+    }));
+  },
+
+  updateMapboxConfig: (updates) => {
+    set((state) => ({
+      mapboxConfig: { ...state.mapboxConfig, ...updates },
     }));
   },
 

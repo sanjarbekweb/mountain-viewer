@@ -31,11 +31,25 @@ export const MountainTerrain = forwardRef<MountainTerrainHandle, MountainTerrain
     const collisionMeshRef = useRef<THREE.Mesh>(null!);
     const terrainConfig = useSceneStore((state) => state.terrainConfig);
     const googleTilesConfig = useSceneStore((state) => state.googleTilesConfig);
+    const mapboxConfig = useSceneStore((state) => state.mapboxConfig);
 
     const { size, maxElevation, snowElevation, rockSlopeAngle, wireframe, mapSource, activeLocationId } = terrainConfig;
     const landmark = getLandmarkById(activeLocationId);
     const CHUNK_GRID_COUNT = 4; // 4x4 chunked terrain
     const chunkSize = size / CHUNK_GRID_COUNT;
+
+    // Determine shader map mode: 0 = Alpine, 1 = Mapbox Light, 2 = Mapbox Outdoors, 3 = Mapbox Satellite
+    const shaderMapMode = useMemo(() => {
+      if (mapSource === "mapbox_simulator") {
+        if (mapboxConfig.style === "light") return 1.0;
+        if (mapboxConfig.style === "outdoors") return 2.0;
+        if (mapboxConfig.style === "satellite") return 3.0;
+        return 1.0;
+      }
+      return 0.0;
+    }, [mapSource, mapboxConfig.style]);
+
+    const elevationMultiplier = mapSource === "mapbox_simulator" ? mapboxConfig.exaggeration : 1.0;
 
     // Generate high-resolution continuous elevation field with morphological adjustments per landmark
     const { elevationGrid, elevationFn } = useMemo(() => {
@@ -81,11 +95,11 @@ export const MountainTerrain = forwardRef<MountainTerrainHandle, MountainTerrain
           h += ridge * 6;
         }
 
-        return Math.max(h, 0);
+        return Math.max(h * elevationMultiplier, 0);
       };
 
       return { elevationGrid: baseGrid, elevationFn: fn };
-    }, [size, maxElevation, activeLocationId]);
+    }, [size, maxElevation, activeLocationId, elevationMultiplier]);
 
     // Build unified collision geometry with BVH tree for sub-0.2ms raycasting
     const collisionGeometry = useMemo(() => {
@@ -179,6 +193,9 @@ export const MountainTerrain = forwardRef<MountainTerrainHandle, MountainTerrain
             snowElevation={snowElevation}
             rockSlopeAngle={rockSlopeAngle}
             wireframe={wireframe}
+            mapMode={shaderMapMode}
+            showContourLines={mapboxConfig.showContourLines}
+            contourInterval={mapboxConfig.contourInterval}
           />
         ))}
 

@@ -1,7 +1,18 @@
 export type TransformMode = "select" | "translate" | "rotate" | "scale";
 export type CameraView = "perspective" | "top" | "front" | "isometric";
-export type MapSource = "google_3d_tiles" | "satellite_dem" | "procedural_alpine";
+export type MapSource = "mapbox_simulator" | "google_3d_tiles" | "procedural_alpine" | "satellite_dem";
 export type ThemeMode = "dark" | "light";
+export type MapboxStyle = "light" | "outdoors" | "satellite";
+
+export interface MapboxConfig {
+  accessToken: string;
+  style: MapboxStyle;
+  exaggeration: number;
+  showContourLines: boolean;
+  contourInterval: number;
+  showRoadsAndWater: boolean;
+  status: "simulating" | "connected";
+}
 
 export interface FoundationSettings {
   enabled: boolean;

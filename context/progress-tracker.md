@@ -65,12 +65,19 @@ Update this file after every meaningful implementation change or architectural d
   - [x] **Unit 10.5:** Removed all emojis across components, modals, and data structures.
   - [x] **Unit 10.6:** Deleted orphaned legacy components (`EarthDashboard.tsx`, `AppSidebar.tsx`, `TopMenuBar.tsx`, `LeftToolStrip.tsx`, `RightPanel.tsx`, `Toolbar.tsx`, `Sidebar.tsx`, `InspectorPanel.tsx`).
   - [x] **Unit 10.7:** Verified TypeScript compilation (`npx tsc --noEmit`) and Turbopack production build (`npm run build`) passing with zero errors.
+- [x] **Phase 11: Mapbox 3D Simulator & Light Map Overhaul** (Completed)
+  - [x] **Unit 11.1:** Added `"mapbox_simulator"` engine to `types/scene.ts` with `MapboxConfig` (styles: `light`, `outdoors`, `satellite`, elevation exaggeration, anti-aliased contour isolines, token support).
+  - [x] **Unit 11.2:** Re-architected `terrainShader.ts` with bright, daylight color palettes (no dark/murky tones) and real-time anti-aliased topographic contour lines using `fwidth()` with major index lines.
+  - [x] **Unit 11.3:** Built Mapbox Light (minimalist architectural topo with clean hillshading), Mapbox Outdoors (vibrant GIS hiking map), and Mapbox Satellite shaders.
+  - [x] **Unit 11.4:** Boosted environment lighting in `EnvironmentRig.tsx` (luminous daylight fill, ambient intensity 1.1, sun intensity 2.4, clear horizon fog).
+  - [x] **Unit 11.5:** Dynamic elevation exaggeration slider (1.0x to 2.5x) in `MountainTerrain.tsx` updating both visual mesh and BVH collision tree.
+  - [x] **Unit 11.6:** Embedded full Mapbox Simulator controls into the Layers drawer in `GoogleEarthDrawer.tsx` and updated `GoogleEarthTelemetry.tsx`.
 
 ## Architecture Decisions
 
 - **ADR-001: 4x4 Chunked LOD Grid:** Partitioned terrain into 16 discrete tiles using `THREE.LOD` with seamless continuous elevation sampling and unified collision BVH bounds.
 - **ADR-002: Async AI Task Dispatching:** Never block Next.js serverless route handlers on generative 3D models; use asynchronous task dispatch with client polling.
-- **ADR-003: 4-Corner Bounding Foundation Plinth:** Compute slope differential $\Delta Y$ across asset footprint to dynamically resize concrete subterranean plinth, completely preventing cliff levitation.
+- **ADR-003: 4-Corner Bounding Foundation Plinth:** Compute slope differential $\Delta Y$ across footprint to dynamically resize concrete subterranean plinth, completely preventing cliff levitation.
 - **ADR-004: OrbitControls Conflict Avoidance:** Wire `dragging-changed` in `TransformControls` to disable camera orbit during gizmo interactions.
 - **ADR-005: Dual Snapping Modes:** Architecture structures stay upright on world $Y$-axis with subterranean plinths; props align to terrain normal vector.
 - **ADR-006: Invariant 3 Pivot Normalization:** Every loaded GLB dynamically recenters on $X/Z$ and aligns base $Y_{min} = 0$ upon ingestion.
@@ -78,10 +85,9 @@ Update this file after every meaningful implementation change or architectural d
 - **ADR-008: Google Earth 3D Tiles & Dual Mode Architecture:** Integrated OGC 3D Tiles streaming with real-world geographic landmarks and dual-view mode.
 - **ADR-009: TypeUI Bento Design Architecture:** Adopted Bergside TypeUI design system blueprint.
 - **ADR-010: Google Earth Platform Minimal Architecture:** Eliminated all multi-page dashboards in favor of full-bleed 3D viewport with Framer Motion floating controls, solid colors (no gradients), light/dark theme, and zero emojis.
+- **ADR-011: Mapbox 3D Simulator & Light Shading Architecture:** Integrated procedural and styled Mapbox 3D terrain simulation with anti-aliased topographic contour lines, elevation exaggeration, and high-luminance daylight lighting.
 
 ## Session Notes
 
-- Project faithfully replicates the official Google Earth platform design, verified, and running via `npm run dev` at `http://localhost:3000`.
-- Git commits: `bc2ca5a` (Core), `7bb032c` (CAD UI), `8d1e329` (Google Earth 3D), and current TypeUI Bento overhaul.
-- Authored full `README.md` documentation aligned with the project's architectural invariants and curated open-source repository presentation standards.
-- Git commits: `bc2ca5a` (Phase 1-4 core), `7bb032c` (Phase 6 AETHERIS UI redesign).
+- Project updated with Mapbox 3D Simulator and bright, crisp light map rendering. Verified with `npx tsc --noEmit` and `npm run build` passing with 0 errors.
+- Dev server active at `http://localhost:3000`.

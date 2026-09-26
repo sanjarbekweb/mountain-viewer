@@ -36,6 +36,8 @@ export function GoogleEarthDrawer({ onOpenAIModal }: GoogleEarthDrawerProps) {
   const updateTerrainConfig = useSceneStore((state) => state.updateTerrainConfig);
   const googleTilesConfig = useSceneStore((state) => state.googleTilesConfig);
   const setGoogleTilesConfig = useSceneStore((state) => state.setGoogleTilesConfig);
+  const mapboxConfig = useSceneStore((state) => state.mapboxConfig);
+  const updateMapboxConfig = useSceneStore((state) => state.updateMapboxConfig);
 
   const assets = useSceneStore((state) => state.assets);
   const selectedAssetId = useSceneStore((state) => state.selectedAssetId);
@@ -45,6 +47,8 @@ export function GoogleEarthDrawer({ onOpenAIModal }: GoogleEarthDrawerProps) {
 
   const [apiKeyInput, setApiKeyInput] = useState(googleTilesConfig.apiKey || "");
   const [keySaved, setKeySaved] = useState(false);
+  const [mapboxTokenInput, setMapboxTokenInput] = useState(mapboxConfig.accessToken || "");
+  const [mapboxTokenSaved, setMapboxTokenSaved] = useState(false);
 
   const isLight = theme === "light";
 
@@ -61,6 +65,17 @@ export function GoogleEarthDrawer({ onOpenAIModal }: GoogleEarthDrawerProps) {
       updateTerrainConfig({ mapSource: "google_3d_tiles" });
       setKeySaved(true);
       setTimeout(() => setKeySaved(false), 2500);
+    }
+  };
+
+  const handleSaveMapboxToken = () => {
+    if (mapboxTokenInput.trim()) {
+      updateMapboxConfig({
+        accessToken: mapboxTokenInput.trim(),
+        status: "connected",
+      });
+      setMapboxTokenSaved(true);
+      setTimeout(() => setMapboxTokenSaved(false), 2500);
     }
   };
 
@@ -142,71 +157,196 @@ export function GoogleEarthDrawer({ onOpenAIModal }: GoogleEarthDrawerProps) {
                   <label className="text-[11px] font-semibold text-gray-500 block mb-1.5">
                     Map Elevation Engine
                   </label>
-                  <div className="grid grid-cols-2 gap-1.5">
+                  <div className="grid grid-cols-3 gap-1.5">
                     <button
                       type="button"
-                      onClick={() => updateTerrainConfig({ mapSource: "google_3d_tiles" })}
-                      className={`py-2 px-3 rounded-lg text-xs font-medium transition-colors ${
-                        terrainConfig.mapSource === "google_3d_tiles"
-                          ? isLight ? "bg-blue-600 text-white" : "bg-[#8ab4f8] text-[#202124] font-bold"
+                      onClick={() => updateTerrainConfig({ mapSource: "mapbox_simulator" })}
+                      className={`py-2 px-1.5 rounded-lg text-[11px] font-medium transition-colors text-center cursor-pointer ${
+                        terrainConfig.mapSource === "mapbox_simulator"
+                          ? isLight ? "bg-blue-600 text-white font-bold" : "bg-[#8ab4f8] text-[#202124] font-bold"
                           : isLight ? "bg-gray-100 hover:bg-gray-200 text-gray-800" : "bg-[#303134] hover:bg-gray-700 text-gray-300"
                       }`}
                     >
-                      Google 3D Tiles
+                      Mapbox 3D
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateTerrainConfig({ mapSource: "google_3d_tiles" })}
+                      className={`py-2 px-1.5 rounded-lg text-[11px] font-medium transition-colors text-center cursor-pointer ${
+                        terrainConfig.mapSource === "google_3d_tiles"
+                          ? isLight ? "bg-blue-600 text-white font-bold" : "bg-[#8ab4f8] text-[#202124] font-bold"
+                          : isLight ? "bg-gray-100 hover:bg-gray-200 text-gray-800" : "bg-[#303134] hover:bg-gray-700 text-gray-300"
+                      }`}
+                    >
+                      Google 3D
                     </button>
                     <button
                       type="button"
                       onClick={() => updateTerrainConfig({ mapSource: "procedural_alpine" })}
-                      className={`py-2 px-3 rounded-lg text-xs font-medium transition-colors ${
+                      className={`py-2 px-1.5 rounded-lg text-[11px] font-medium transition-colors text-center cursor-pointer ${
                         terrainConfig.mapSource === "procedural_alpine"
-                          ? isLight ? "bg-blue-600 text-white" : "bg-[#8ab4f8] text-[#202124] font-bold"
+                          ? isLight ? "bg-blue-600 text-white font-bold" : "bg-[#8ab4f8] text-[#202124] font-bold"
                           : isLight ? "bg-gray-100 hover:bg-gray-200 text-gray-800" : "bg-[#303134] hover:bg-gray-700 text-gray-300"
                       }`}
                     >
-                      Alpine Topo DEM
+                      Alpine Topo
                     </button>
                   </div>
                 </div>
 
-                {/* Google Maps API Key field */}
-                <div className="space-y-1.5 pt-2 border-t border-gray-100 dark:border-gray-800">
-                  <label className="text-[11px] font-semibold text-gray-500 block">
-                    Google Maps API Key
-                  </label>
-                  <div className="flex gap-1.5">
-                    <input
-                      type="password"
-                      value={apiKeyInput}
-                      onChange={(e) => setApiKeyInput(e.target.value)}
-                      placeholder="Paste API key..."
-                      className={`flex-1 px-3 py-1.5 rounded-lg border text-xs font-mono focus:outline-none ${
-                        isLight
-                          ? "bg-gray-50 border-gray-200 focus:border-blue-600"
-                          : "bg-[#303134] border-[#3c4043] focus:border-[#8ab4f8]"
-                      }`}
-                    />
-                    <button
-                      type="button"
-                      onClick={handleSaveApiKey}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer ${
-                        isLight ? "bg-blue-600 text-white" : "bg-[#8ab4f8] text-[#202124]"
-                      }`}
-                    >
-                      {keySaved ? <Check className="w-3.5 h-3.5" /> : "Apply"}
-                    </button>
-                  </div>
-
-                  {googleTilesConfig.status === "error" && (
-                    <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-[11px] space-y-1 mt-2">
-                      <div className="font-semibold">Error 403 (Forbidden)</div>
-                      <div className="text-[10px] text-gray-500 dark:text-gray-300 leading-tight space-y-0.5">
-                        <p>1. Enable <strong>Map Tiles API</strong> in Google Cloud Console.</p>
-                        <p>2. Ensure key allows <strong>Map Tiles API</strong> and <code>localhost:3000</code>.</p>
-                        <p>3. Ensure a billing account is linked to your project.</p>
+                {/* Mapbox Simulator Interactive Controls */}
+                {terrainConfig.mapSource === "mapbox_simulator" && (
+                  <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-[11px] font-semibold text-gray-500">
+                          Mapbox Style
+                        </label>
+                        <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-[#8ab4f8]">
+                          {mapboxConfig.status}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-1">
+                        {(["light", "outdoors", "satellite"] as const).map((styleName) => (
+                          <button
+                            key={styleName}
+                            type="button"
+                            onClick={() => updateMapboxConfig({ style: styleName })}
+                            className={`py-1.5 px-1 rounded text-[10px] font-semibold capitalize cursor-pointer transition-colors text-center ${
+                              mapboxConfig.style === styleName
+                                ? isLight ? "bg-blue-600 text-white" : "bg-[#8ab4f8] text-[#202124]"
+                                : isLight ? "bg-gray-100 hover:bg-gray-200 text-gray-700" : "bg-[#303134] hover:bg-gray-700 text-gray-300"
+                            }`}
+                          >
+                            {styleName === "light" ? "Light Topo" : styleName === "outdoors" ? "Outdoors" : "Satellite"}
+                          </button>
+                        ))}
                       </div>
                     </div>
-                  )}
-                </div>
+
+                    {/* Elevation Exaggeration Slider */}
+                    <div>
+                      <div className="flex justify-between text-xs text-gray-500 mb-1">
+                        <span>Elevation Exaggeration</span>
+                        <span className="font-mono font-semibold">{mapboxConfig.exaggeration.toFixed(2)}x</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="1.0"
+                        max="2.5"
+                        step="0.05"
+                        value={mapboxConfig.exaggeration}
+                        onChange={(e) => updateMapboxConfig({ exaggeration: parseFloat(e.target.value) })}
+                        className="w-full accent-blue-600 cursor-pointer"
+                      />
+                    </div>
+
+                    {/* Topographic Contour Lines */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-semibold text-gray-500">
+                          Topographic Contour Lines
+                        </label>
+                        <input
+                          type="checkbox"
+                          checked={mapboxConfig.showContourLines}
+                          onChange={(e) => updateMapboxConfig({ showContourLines: e.target.checked })}
+                          className="rounded accent-blue-600 cursor-pointer w-3.5 h-3.5"
+                        />
+                      </div>
+                      {mapboxConfig.showContourLines && (
+                        <div className="flex items-center gap-1.5 pt-1">
+                          <span className="text-[10px] text-gray-400">Contour Interval:</span>
+                          {[10, 15, 25, 50].map((intv) => (
+                            <button
+                              key={intv}
+                              type="button"
+                              onClick={() => updateMapboxConfig({ contourInterval: intv })}
+                              className={`px-2 py-0.5 rounded text-[10px] font-mono cursor-pointer transition-colors ${
+                                mapboxConfig.contourInterval === intv
+                                  ? isLight ? "bg-blue-600 text-white" : "bg-[#8ab4f8] text-[#202124] font-bold"
+                                  : isLight ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-[#303134] text-gray-300 hover:bg-gray-700"
+                              }`}
+                            >
+                              {intv}m
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Optional Mapbox Token */}
+                    <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
+                      <label className="text-[11px] font-semibold text-gray-500 block mb-1">
+                        Mapbox Token (Optional)
+                      </label>
+                      <div className="flex gap-1.5">
+                        <input
+                          type="password"
+                          value={mapboxTokenInput}
+                          onChange={(e) => setMapboxTokenInput(e.target.value)}
+                          placeholder="pk.eyJ1..."
+                          className={`flex-1 px-3 py-1.5 rounded-lg border text-xs font-mono focus:outline-none ${
+                            isLight
+                              ? "bg-gray-50 border-gray-200 focus:border-blue-600"
+                              : "bg-[#303134] border-[#3c4043] focus:border-[#8ab4f8]"
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleSaveMapboxToken}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer ${
+                            isLight ? "bg-blue-600 text-white" : "bg-[#8ab4f8] text-[#202124]"
+                          }`}
+                        >
+                          {mapboxTokenSaved ? <Check className="w-3.5 h-3.5" /> : "Save"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Google Maps API Key field */}
+                {terrainConfig.mapSource === "google_3d_tiles" && (
+                  <div className="space-y-1.5 pt-2 border-t border-gray-100 dark:border-gray-800">
+                    <label className="text-[11px] font-semibold text-gray-500 block">
+                      Google Maps API Key
+                    </label>
+                    <div className="flex gap-1.5">
+                      <input
+                        type="password"
+                        value={apiKeyInput}
+                        onChange={(e) => setApiKeyInput(e.target.value)}
+                        placeholder="Paste API key..."
+                        className={`flex-1 px-3 py-1.5 rounded-lg border text-xs font-mono focus:outline-none ${
+                          isLight
+                            ? "bg-gray-50 border-gray-200 focus:border-blue-600"
+                            : "bg-[#303134] border-[#3c4043] focus:border-[#8ab4f8]"
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveApiKey}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer ${
+                          isLight ? "bg-blue-600 text-white" : "bg-[#8ab4f8] text-[#202124]"
+                        }`}
+                      >
+                        {keySaved ? <Check className="w-3.5 h-3.5" /> : "Apply"}
+                      </button>
+                    </div>
+
+                    {googleTilesConfig.status === "error" && (
+                      <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-[11px] space-y-1 mt-2">
+                        <div className="font-semibold">Error 403 (Forbidden)</div>
+                        <div className="text-[10px] text-gray-500 dark:text-gray-300 leading-tight space-y-0.5">
+                          <p>1. Enable <strong>Map Tiles API</strong> in Google Cloud Console.</p>
+                          <p>2. Ensure key allows <strong>Map Tiles API</strong> and <code>localhost:3000</code>.</p>
+                          <p>3. Ensure a billing account is linked to your project.</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Terrain Sliders */}
                 <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-800">
